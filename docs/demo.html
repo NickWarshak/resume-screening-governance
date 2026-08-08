@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Screening bench — live model demo</title>
+<meta name="description" content="Score a candidate against both models in real time and watch the naive model react to demographic proxies while the governed model cannot.">
+<style>
+:root {
+  --ink:#16150f; --muted:#52514e; --faint:#6b6a63; --rule:#d8d7d2; --hair:#e6e4de;
+  --blue:#2a78d6; --blue-wash:#eaf2fc; --red:#e34948; --red-wash:#fdeeee;
+  --fail:#b3201f; --pass:#0f6b3f; --amber:#a86a12; --wash:#f6f5f1; --page:#fdfdfb; --card:#fff;
+}
+* { box-sizing:border-box; }
+body { font-family:"DejaVu Serif",Georgia,serif; font-size:11.5pt; line-height:1.6;
+       color:var(--ink); background:var(--page); margin:0; }
+.wrap { max-width:70rem; margin:0 auto; padding:0 1.5rem 4rem; }
+h1,h2,h3,h4,.sans { font-family:"DejaVu Sans",Helvetica,Arial,sans-serif; }
+h1 { font-size:27pt; line-height:1.12; letter-spacing:-0.5px; margin:0 0 8px; }
+h2 { font-size:14pt; margin:0 0 10px; }
+p { margin:0 0 11px; }
+a { color:var(--blue); text-underline-offset:2px; }
+
+header { border-top:5px solid var(--ink); background:var(--wash);
+         border-bottom:1px solid var(--rule); }
+header .wrap { padding-top:1.4rem; padding-bottom:1.8rem; }
+.backlink { font-family:"DejaVu Sans",Helvetica,sans-serif; font-size:9.6pt;
+            color:var(--blue); text-decoration:none; display:inline-block; margin-bottom:16px; }
+.backlink:hover { text-decoration:underline; }
+.lede { font-family:"DejaVu Sans",Helvetica,sans-serif; font-size:11.6pt; line-height:1.5;
+        color:var(--muted); margin:8px 0 0; max-width:44rem; }
+
+.layout { display:grid; grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);
+          gap:34px; align-items:start; margin-top:26px; }
+@media (max-width:900px){ .layout { grid-template-columns:1fr; gap:24px; } }
+
+/* ---------------- panels ---------------- */
+.panel { background:var(--card); border:1px solid var(--hair); padding:16px 18px 18px;
+         margin-bottom:18px; }
+.panel > h3 { font-size:11pt; margin:0 0 3px; }
+.panel .hint { font-family:"DejaVu Sans",Helvetica,sans-serif; font-size:9pt;
+               color:var(--faint); margin:0 0 14px; line-height:1.45; }
+.panel.proxy { border-color:#f0c9c9; border-left:3px solid var(--red); background:#fffcfc; }
+.panel.proxy > h3 { color:var(--fail); }
+
+/* ---------------- controls ---------------- */
+.presets { display:flex; flex-wrap:wrap; gap:7px; margin-bottom:16px; }
+.btn { font-family:"DejaVu Sans",Helvetica,sans-serif; font-size:9.2pt; cursor:pointer;
+       background:var(--card); border:1px solid var(--rule); color:var(--ink);
+       padding:6px 12px; border-radius:2px; }
+.btn:hover { border-color:var(--blue); color:var(--blue); }
+.btn.active { background:var(--ink); color:#fff; border-color:var(--ink); }
+
+.ctl { margin-bottom:13px; }
+.ctl-top { display:flex; justify-content:space-between; align-items:baseline; gap:10px;
+           font-family:"DejaVu Sans",Helvetica,sans-serif; font-size:9.5pt; }
+.ctl-top label { color:var(--ink); }
+.ctl-val { font-variant-numeric:tabular-nums; font-weight:600; color:var(--blue); white-space:nowrap; }
+.panel.proxy .ctl-val { color:var(--fail); }
+input[type=range]{ -webkit-appearance:none; appearance:none; width:100%; height:20px;
+                   background:transparent; margin:3px 0 0; cursor:pointer; }
+input[type=range]::-webkit-slider-runnable-track{ height:4px; background:var(--hair); border-radius:2px; }
+input[type=range]::-moz-range-track{ height:4px; background:var(--hair); border-radius:2px; }
+input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; width:15px; height:15px;
+   border-radius:50%; background:var(--blue); margin-top:-5.5px; border:2px solid #fff;
+   box-shadow:0 0 0 1px var(--rule); }
+input[type=range]::-moz-range-thumb{ width:15px; height:15px; border-radius:50%;
+   background:var(--blue); border:2px solid #fff; box-shadow:0 0 0 1px var(--rule); }
+.panel.proxy input[type=range]::-webkit-slider-thumb{ background:var(--red); }
+.panel.proxy input[type=range]::-moz-range-thumb{ background:var(--red); }
+input[type=range]:focus-visible{ outline:2px solid var(--blue); outline-offset:3px; }
+select { font-family:"DejaVu Sans",Helvetica,sans-serif; font-size:9.5pt; padding:4px 6px;
+         border:1px solid var(--rule); background:#fff; width:100%; margin-top:3px; }
+.toggle { display:flex; gap:0; margin-top:4px; }
+.toggle button { flex:1; font-family:"DejaVu Sans",Helvetica,sans-serif; font-size:9.2pt;
+                 padding:6px 0; border:1px solid var(--rule); background:#fff; cursor:pointer;
+                 color:var(--muted); }
+.toggle button:first-child { border-radius:2px 0 0 2px; }
+.toggle button:last-child { border-radius:0 2px 2px 0; border-left:none; }
+.toggle button[aria-pressed=true] { background:var(--red); border-color:var(--red); color:#fff; }
+
+/* ---------------- score cards ---------------- */
+.sticky { position:sticky; top:16px; }
+.score { border:1px solid var(--hair); background:var(--card); padding:15px 17px 16px;
+         margin-bottom:14px; }
+.score.gov { border-top:3px solid var(--blue); }
+.score.naive { border-top:3px solid var(--red); }
+.score-head { display:flex; justify-content:space-between; align-items:baseline; gap:12px;
+              font-family:"DejaVu Sans",Helvetica,sans-serif; }
+.score-name { font-size:10.4pt; font-weight:600; }
+.score-tag { font-size:7.8pt; text-transform:uppercase; letter-spacing:0.8px; padding:2px 7px;
+             border-radius:2px; font-weight:600; }
+.score.gov .score-tag { background:var(--blue-wash); color:#1b5ba8; }
+.score.naive .score-tag { background:var(--red-wash); color:var(--fail); }
+.score-num { font-family:"DejaVu Sans",Helvetica,sans-serif; font-size:38pt; font-weight:700;
+             line-height:1.05; letter-spacing:-1.5px; font-variant-numeric:tabular-nums;
+             margin:8px 0 2px; transition:color .18s ease; }
+.score.gov .score-num { color:var(--blue); }
+.score.naive .score-num { color:var(--red); }
+.score-num.bump { animation:bump .45s ease; }
+@keyframes bump { 0%{transform:scale(1)} 30%{transform:scale(1.07)} 100%{transform:scale(1)} }
+.score-sub { font-family:"DejaVu Sans",Helvetica,sans-serif; font-size:8.8pt; color:var(--faint);
+             line-height:1.45; }
+.delta { font-family:"DejaVu Sans",Helvetica,sans-serif; font-size:9.4pt; font-weight:600;
+         margin-left:9px; vertical-align:middle; opacity:0; transition:opacity .2s ease; }
+.delta.show { opacity:1; }
+.delta.up { color:var(--fail); } .delta.down { color:var(--pass); } .delta.flat { color:var(--faint); }
+
+.bar { height:7px; background:var(--hair); border-radius:4px; margin:11px 0 5px; position:relative; }
+.bar > span { display:block; height:100%; border-radius:4px; transition:width .22s ease; }
+.score.gov .bar > span { background:var(--blue); }
+.score.naive .bar > span { background:var(--red); }
+
+.action { font-family:"DejaVu Sans",Helvetica,sans-serif; font-size:9.4pt; font-weight:600;
+          padding:8px 11px; border-radius:2px; margin-top:11px; line-height:1.4; }
+.action.advance { background:#e8f3ec; color:var(--pass); border-left:3px solid var(--pass); }
+.action.abstain { background:#fdf4e5; color:var(--amber); border-left:3px solid var(--amber); }
+.action.low     { background:var(--wash); color:var(--muted); border-left:3px solid var(--faint); }
+.action small { display:block; font-weight:400; font-size:8.6pt; margin-top:3px; opacity:.9; }
+
+/* ---------------- proxy leverage ---------------- */
+.lev { font-family:"DejaVu Sans",Helvetica,sans-serif; font-size:9pt; width:100%;
+       border-collapse:collapse; margin-top:6px; }
+.lev th { text-align:left; font-size:8.2pt; text-transform:uppercase; letter-spacing:.6px;
+          color:var(--faint); font-weight:600; padding:0 6px 6px 0; border-bottom:1px solid var(--hair); }
+.lev th.n, .lev td.n { text-align:right; font-variant-numeric:tabular-nums; }
+.lev td { padding:6px 6px 6px 0; border-bottom:1px solid #f2f1ec; }
+.lev td.n.hot { color:var(--fail); font-weight:600; }
+.lev td.n.zero { color:var(--pass); font-weight:600; }
+
+/* ---------------- contributions ---------------- */
+.contrib { font-family:"DejaVu Sans",Helvetica,sans-serif; font-size:9pt; }
+.crow { display:grid; grid-template-columns:9.5rem 1fr 3.4rem; gap:9px; align-items:center;
+        margin-bottom:5px; }
+.cname { color:var(--muted); text-align:right; overflow:hidden; text-overflow:ellipsis;
+         white-space:nowrap; }
+.ctrack { position:relative; height:15px; background:linear-gradient(90deg,transparent 49.7%,
+          var(--rule) 49.7%,var(--rule) 50.3%,transparent 50.3%); }
+.cfill { position:absolute; top:2px; height:11px; border-radius:1px; transition:all .2s ease; }
+.cval { font-variant-numeric:tabular-nums; color:var(--muted); text-align:right; font-size:8.6pt; }
+
+.note { background:var(--wash); border-left:3px solid var(--blue); padding:11px 14px;
+        font-family:"DejaVu Sans",Helvetica,sans-serif; font-size:9.2pt; line-height:1.5;
+        color:var(--muted); margin:0 0 18px; }
+.note strong { color:var(--ink); }
+.note.warn { border-left-color:var(--red); }
+footer { border-top:1px solid var(--rule); margin-top:40px; padding-top:14px;
+         font-family:"DejaVu Sans",Helvetica,sans-serif; font-size:8.8pt; color:var(--faint); }
+code { font-family:"DejaVu Sans Mono",ui-monospace,Consolas,monospace; font-size:9.6pt;
+       background:#f2f1ec; padding:1px 4px; }
+#loading { padding:40px 0; font-family:"DejaVu Sans",Helvetica,sans-serif; color:var(--muted); }
+.err { color:var(--fail); }
+</style>
+</head><body>
+
+<header><div class="wrap">
+  <a class="backlink" href="./">&larr; Project home</a>
+  <h1>Screening bench</h1>
+  <p class="lede">Build a candidate and watch both models score them in real time. The
+  point of the exercise is the second panel: change a demographic proxy and the naive
+  model moves, while the governed model cannot see the change at all.</p>
+</div></header>
+
+<div class="wrap">
+<div id="loading">Loading model parameters…</div>
+
+<div class="layout" id="app" hidden>
+
+  <!-- ============ INPUTS ============ -->
+  <div>
+    <div class="presets" id="presets"></div>
+
+    <div class="panel">
+      <h3>Merit features</h3>
+      <p class="hint">Twelve résumé attributes. Both models use all of these.</p>
+      <div id="merit"></div>
+    </div>
+
+    <div class="panel proxy">
+      <h3>Demographic proxy features</h3>
+      <p class="hint">Four attributes that correlate with protected class in this population.
+      <strong>Only the naive model uses them</strong> — they were removed from the governed
+      model's feature set entirely, so it is structurally incapable of responding to them.</p>
+      <div id="proxies"></div>
+    </div>
+
+    <div class="panel">
+      <h3>Proxy leverage for this candidate</h3>
+      <p class="hint">How much each proxy is worth, in calibrated probability points, if flipped
+      from its low value to its high value while everything else is held fixed.</p>
+      <table class="lev">
+        <thead><tr><th>Proxy feature</th><th class="n">Naive model</th><th class="n">Governed</th></tr></thead>
+        <tbody id="leverage"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ============ RESULTS ============ -->
+  <div>
+   <div class="sticky">
+    <div class="score gov">
+      <div class="score-head">
+        <span class="score-name">Governed model</span>
+        <span class="score-tag">Production candidate</span>
+      </div>
+      <div class="score-num" id="gov-num">—<span class="delta" id="gov-delta"></span></div>
+      <div class="bar"><span id="gov-bar" style="width:0"></span></div>
+      <div class="score-sub" id="gov-sub"></div>
+      <div class="action" id="gov-action"></div>
+    </div>
+
+    <div class="score naive">
+      <div class="score-head">
+        <span class="score-name">Naive model</span>
+        <span class="score-tag">Higher AUC · rejected</span>
+      </div>
+      <div class="score-num" id="nai-num">—<span class="delta" id="nai-delta"></span></div>
+      <div class="bar"><span id="nai-bar" style="width:0"></span></div>
+      <div class="score-sub" id="nai-sub"></div>
+    </div>
+
+    <div class="note warn" id="divergence"></div>
+
+    <div class="panel">
+      <h3>Why the governed model scored this</h3>
+      <p class="hint">Exact per-feature contribution to the log-odds. For a linear model these
+      <em>are</em> the Shapley values — computed in closed form, not sampled.</p>
+      <div class="contrib" id="contrib"></div>
+    </div>
+   </div>
+  </div>
+
+</div>
+
+<footer>
+  <p>Scoring runs entirely in your browser. The standardizer, coefficients and isotonic
+  calibration curve are exported from the trained scikit-learn pipeline by
+  <code>src/export_web_model.py</code>, which aborts unless this arithmetic reproduces
+  <code>predict_proba</code> on all 2,400 test applicants — it currently matches to
+  <strong>0.00e+00</strong>, bit for bit.</p>
+  <p>Synthetic data throughout. Reference implementation — not a hiring tool, and not
+  approved for production use.</p>
+</footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var M = null, cur = {}, prev = {gov:null, nai:null}, activePreset = null;
+
+  // ---------- scoring: mirrors src/export_web_model.py score_pure() ----------
+  function interp(x, xs, ys) {                 // np.interp with endpoint clipping
+    var n = xs.length;
+    if (x <= xs[0]) return ys[0];
+    if (x >= xs[n-1]) return ys[n-1];
+    var lo = 0, hi = n - 1;
+    while (hi - lo > 1) { var mid = (lo + hi) >> 1; if (xs[mid] <= x) lo = mid; else hi = mid; }
+    var span = xs[hi] - xs[lo];
+    if (span === 0) return ys[hi];
+    return ys[lo] + (x - xs[lo]) / span * (ys[hi] - ys[lo]);
+  }
+
+  function score(m, vals) {
+    var margin = m.intercept, z = new Array(m.features.length);
+    for (var i = 0; i < m.features.length; i++) {
+      z[i] = (vals[m.features[i]] - m.mean[i]) / m.scale[i];
+      margin += z[i] * m.coef[i];
+    }
+    return { p: interp(margin, m.iso_x, m.iso_y), margin: margin, z: z };
+  }
+
+  // Exact Shapley values for a linear model: phi_j = coef_j * (z_j - E[z_j]).
+  function contributions(m, z) {
+    var out = [];
+    for (var i = 0; i < m.features.length; i++) {
+      out.push({ feature: m.features[i], phi: m.coef[i] * (z[i] - m.z_mean[i]) });
+    }
+    return out.sort(function (a, b) { return Math.abs(b.phi) - Math.abs(a.phi); });
+  }
+
+  function percentile(m, p) {                  // position within the 2,400-applicant test set
+    var q = m.score_quantiles;
+    for (var i = 0; i < q.length; i++) if (p <= q[i]) return i;
+    return 100;
+  }
+
+  function fmtVal(f, v) {
+    var meta = M.features[f];
+    if (meta.choices) return meta.choices[Math.round(v)] || String(v);
+    if (meta.binary) return v >= 0.5 ? "Yes" : "No";
+    var s = v.toFixed(meta.decimals);
+    return meta.unit ? s + " " + meta.unit : s;
+  }
+
+  // ---------- control construction ----------
+  function makeControl(f, host) {
+    var meta = M.features[f];
+    var wrap = document.createElement("div"); wrap.className = "ctl";
+    var id = "in-" + f;
+
+    var top = document.createElement("div"); top.className = "ctl-top";
+    var lab = document.createElement("label"); lab.textContent = meta.label; lab.htmlFor = id;
+    var val = document.createElement("span"); val.className = "ctl-val"; val.id = "val-" + f;
+    top.appendChild(lab); top.appendChild(val); wrap.appendChild(top);
+
+    if (meta.binary) {
+      var tg = document.createElement("div"); tg.className = "toggle"; tg.id = id;
+      [["No", 0], ["Yes", 1]].forEach(function (opt) {
+        var b = document.createElement("button");
+        b.type = "button"; b.textContent = opt[0];
+        b.setAttribute("aria-pressed", String(cur[f] === opt[1]));
+        b.addEventListener("click", function () { setVal(f, opt[1]); });
+        tg.appendChild(b);
+      });
+      wrap.appendChild(tg);
+    } else if (meta.choices) {
+      var sel = document.createElement("select"); sel.id = id;
+      meta.choices.forEach(function (c, i) {
+        var o = document.createElement("option"); o.value = String(i); o.textContent = c;
+        sel.appendChild(o);
+      });
+      sel.addEventListener("input", function () { setVal(f, parseFloat(sel.value)); });
+      wrap.appendChild(sel);
+    } else {
+      var r = document.createElement("input");
+      r.type = "range"; r.id = id;
+      r.min = meta.min; r.max = meta.max; r.step = meta.step;
+      r.addEventListener("input", function () { setVal(f, parseFloat(r.value)); });
+      wrap.appendChild(r);
+    }
+    host.appendChild(wrap);
+  }
+
+  function syncControl(f) {
+    var meta = M.features[f], v = cur[f];
+    document.getElementById("val-" + f).textContent = fmtVal(f, v);
+    var el = document.getElementById("in-" + f);
+    if (!el) return;
+    if (meta.binary) {
+      var btns = el.querySelectorAll("button");
+      btns[0].setAttribute("aria-pressed", String(v < 0.5));
+      btns[1].setAttribute("aria-pressed", String(v >= 0.5));
+    } else if (meta.choices) { el.value = String(Math.round(v)); }
+    else { el.value = String(v); }
+  }
+
+  function setVal(f, v) {
+    cur[f] = v;
+    syncControl(f);
+    clearPreset();
+    render();
+  }
+
+  function clearPreset() {
+    activePreset = null;
+    Array.prototype.forEach.call(document.querySelectorAll("#presets .btn"), function (b) {
+      b.classList.remove("active");
+    });
+  }
+
+  // ---------- rendering ----------
+  function setScore(prefix, p, prevP, m) {
+    var numEl = document.getElementById(prefix + "-num");
+    var pct = (p * 100).toFixed(1);
+    numEl.firstChild.nodeValue = pct + "%";
+    document.getElementById(prefix + "-bar").style.width = Math.max(p * 100, 0.6) + "%";
+
+    var d = document.getElementById(prefix + "-delta");
+    if (prevP === null || Math.abs(p - prevP) < 5e-4) {
+      d.className = "delta";
+      d.textContent = "";
+    } else {
+      var diff = (p - prevP) * 100;
+      d.textContent = (diff > 0 ? "+" : "") + diff.toFixed(1);
+      d.className = "delta show " + (diff > 0 ? "up" : "down");
+      numEl.classList.remove("bump");
+      void numEl.offsetWidth;
+      numEl.classList.add("bump");
+    }
+    var pc = percentile(m, p);
+    document.getElementById(prefix + "-sub").innerHTML =
+      "Calibrated probability of advancing to onsite &middot; ranks above <strong>" +
+      pc + "%</strong> of the 2,400-applicant test set";
+  }
+
+  function setAction(p) {
+    var el = document.getElementById("gov-action");
+    if (p >= 0.55) {
+      el.className = "action advance";
+      el.innerHTML = "ADVANCE RECOMMENDED<small>Above the 0.55 threshold. Still requires human sign-off.</small>";
+    } else if (p >= 0.25) {
+      el.className = "action abstain";
+      el.innerHTML = "ABSTAIN &rarr; HUMAN REVIEW<small>Inside the 0.25–0.55 uncertainty band. The model declines to rank; the score is withheld from the recruiter.</small>";
+    } else {
+      el.className = "action low";
+      el.innerHTML = "LOW-PRIORITY REVIEW<small>Below the band. Note this is not a rejection — the architecture contains no REJECT path.</small>";
+    }
+  }
+
+  function renderContrib(m, z) {
+    var rows = contributions(m, z);
+    var max = Math.max.apply(null, rows.map(function (r) { return Math.abs(r.phi); })) || 1;
+    var html = "";
+    rows.forEach(function (r) {
+      var w = Math.abs(r.phi) / max * 50;
+      var pos = r.phi >= 0;
+      html += '<div class="crow"><div class="cname">' + M.features[r.feature].label + '</div>' +
+        '<div class="ctrack"><div class="cfill" style="' +
+        (pos ? "left:50%;" : "right:50%;") + "width:" + w + "%;background:" +
+        (pos ? "var(--blue)" : "var(--red)") + '"></div></div>' +
+        '<div class="cval">' + (pos ? "+" : "") + r.phi.toFixed(2) + "</div></div>";
+    });
+    document.getElementById("contrib").innerHTML = html;
+  }
+
+  function renderLeverage(gov, nai) {
+    var html = "";
+    M.proxy_features.forEach(function (f) {
+      var meta = M.features[f];
+      var lo = meta.binary ? 0 : meta.min, hi = meta.binary ? 1 : meta.max;
+      var a = Object.assign({}, cur); a[f] = lo;
+      var b = Object.assign({}, cur); b[f] = hi;
+      var swing = (score(nai, b).p - score(nai, a).p) * 100;
+      html += "<tr><td>" + meta.label + "</td>" +
+        '<td class="n hot">' + (swing > 0 ? "+" : "") + swing.toFixed(1) + " pts</td>" +
+        '<td class="n zero">0.0 pts</td></tr>';
+    });
+    document.getElementById("leverage").innerHTML = html;
+  }
+
+  function render() {
+    var gov = M.models.governed, nai = M.models.naive;
+    var sg = score(gov, cur), sn = score(nai, cur);
+
+    setScore("gov", sg.p, prev.gov, gov);
+    setScore("nai", sn.p, prev.nai, nai);
+    prev.gov = sg.p; prev.nai = sn.p;
+
+    setAction(sg.p);
+    renderContrib(gov, sg.z);
+    renderLeverage(gov, nai);
+
+    var gap = (sn.p - sg.p) * 100;
+    var el = document.getElementById("divergence");
+    if (Math.abs(gap) < 2) {
+      el.innerHTML = "The two models agree on this candidate to within " +
+        Math.abs(gap).toFixed(1) + " points. Try switching a proxy on or off.";
+    } else if (gap > 0) {
+      el.innerHTML = "The naive model rates this candidate <strong>" + gap.toFixed(1) +
+        " points higher</strong>. That gap is what its proxy features are buying — and it " +
+        "is invisible in production, because true qualification is never observed.";
+    } else {
+      el.innerHTML = "The naive model rates this candidate <strong>" + Math.abs(gap).toFixed(1) +
+        " points lower</strong>. Lacking the proxy signals it rewards, it discounts a " +
+        "candidate the governed model ranks on merit alone.";
+    }
+  }
+
+  // ---------- presets ----------
+  function applyPreset(values, btn) {
+    Object.keys(values).forEach(function (f) { cur[f] = values[f]; });
+    Object.keys(M.features).forEach(syncControl);
+    clearPreset();
+    if (btn) { btn.classList.add("active"); activePreset = btn; }
+    render();
+  }
+
+  function medianCandidate() {
+    var v = {};
+    Object.keys(M.features).forEach(function (f) {
+      var meta = M.features[f];
+      v[f] = meta.binary ? Math.round(meta.median) : meta.median;
+    });
+    return v;
+  }
+
+  // ---------- boot ----------
+  fetch("model.json")
+    .then(function (r) {
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return r.json();
+    })
+    .then(function (data) {
+      M = data;
+      cur = medianCandidate();
+
+      var meritHost = document.getElementById("merit");
+      var proxyHost = document.getElementById("proxies");
+      M.merit_features.forEach(function (f) { makeControl(f, meritHost); });
+      M.proxy_features.forEach(function (f) { makeControl(f, proxyHost); });
+      Object.keys(M.features).forEach(syncControl);
+
+      var ph = document.getElementById("presets");
+      var opening = null;
+      M.presets.forEach(function (p) {
+        var b = document.createElement("button");
+        b.className = "btn"; b.type = "button"; b.textContent = p.label;
+        b.addEventListener("click", function () { applyPreset(p.values, b); });
+        ph.appendChild(b);
+        // Open on the borderline case: it sits inside the abstention band, where
+        // the governance behaviour is actually visible.
+        if (/borderline/i.test(p.label)) opening = { values: p.values, btn: b };
+      });
+      var rb = document.createElement("button");
+      rb.className = "btn"; rb.type = "button"; rb.textContent = "Median applicant";
+      rb.addEventListener("click", function () { applyPreset(medianCandidate(), rb); });
+      ph.appendChild(rb);
+
+      document.getElementById("loading").hidden = true;
+      document.getElementById("app").hidden = false;
+      if (opening) applyPreset(opening.values, opening.btn); else render();
+    })
+    .catch(function (e) {
+      document.getElementById("loading").innerHTML =
+        '<span class="err">Could not load <code>model.json</code> (' + e.message +
+        "). This page needs to be served over HTTP, not opened from disk.</span>";
+    });
+})();
+</script>
+</body></html>

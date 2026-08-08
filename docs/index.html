@@ -68,6 +68,16 @@ header .wrap { padding-top: 2.6rem; padding-bottom: 2rem; }
                 font-weight: 700; display: block; margin-bottom: 7px; }
 .finding p:last-child { margin-bottom: 0; }
 
+/* ---------- call to action ---------- */
+.cta { display:inline-flex; align-items:baseline; gap:9px; background:var(--ink); color:#fff;
+       font-family:"DejaVu Sans",Helvetica,sans-serif; font-size:10.6pt; font-weight:600;
+       text-decoration:none; padding:11px 19px; border-radius:2px; margin:4px 0 2px;
+       transition:background .15s ease; }
+.cta:hover { background:var(--blue); color:#fff; }
+.cta span { font-weight:400; opacity:.75; font-size:9.4pt; }
+.cta-note { font-family:"DejaVu Sans",Helvetica,sans-serif; font-size:9.2pt;
+            color:var(--faint); margin:8px 0 0; }
+
 /* ---------- tables ---------- */
 .tablewrap { overflow-x: auto; margin: 14px 0 8px; }
 table { width: 100%; border-collapse: collapse;
@@ -165,9 +175,21 @@ Training data is a synthetic population of 12,000 applicants in which latent qua
 known and generated independent of protected class — so every disparity the audit finds is
 measurement bias by construction.</p>
 
+<p><a class="cta" href="demo.html">Run both models live <span>→ interactive demo</span></a></p>
+<p class="cta-note">Build a candidate, then flip a proxy feature. For the borderline applicant
+the demo opens on, an internal referral is worth <strong>+44.8 points</strong> of advancement
+probability to the naive model — and <strong>0.0</strong> to the governed one, which cannot see
+it. Scoring runs in your browser, and matches scikit-learn to within 1e-13.</p>
+
 <h2>Read the work</h2>
 
 <ul class="cards">
+  <li class="card">
+    <h3><a href="demo.html">Interactive demo</a></h3>
+    <p>Score a candidate against both models in real time, with exact per-feature
+    attributions and the live decision envelope — advance, abstain, or route to review.</p>
+    <span class="alt">Runs client-side &middot; no server</span>
+  </li>
   <li class="card">
     <h3><a href="report.html">Governance report</a></h3>
     <p>The primary deliverable. Model overview, disparate-impact audit, explainability,

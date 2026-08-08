@@ -1,6 +1,7 @@
 # Responsible AI Resume Screening — Governance Project
 
 **Live site → <https://nickwarshak.github.io/resume-screening-governance/>**
+&nbsp;·&nbsp; **[Interactive demo](https://nickwarshak.github.io/resume-screening-governance/demo.html)**
 &nbsp;·&nbsp; [Report](https://nickwarshak.github.io/resume-screening-governance/report.html)
 &nbsp;·&nbsp; [Notebook](https://nickwarshak.github.io/resume-screening-governance/notebook.html)
 &nbsp;·&nbsp; [Model card](https://nickwarshak.github.io/resume-screening-governance/model-card.html)
@@ -23,7 +24,10 @@ production (AUC 0.911) selects the discriminatory model; the governed model scor
 | `src/` | All source modules |
 | `figures/` | Generated figures (SHAP, fairness, monitoring, energy) |
 | `reports/*.json`, `*.csv` | Raw computed metrics |
+| `docs/demo.html` | Interactive scorer — both models, live, client-side |
 | `tests/verify_report.py` | Automated gate: 64 checks that report claims match pipeline output |
+| `tests/verify_web_demo.py` | Gate: the shipped browser JS matches `predict_proba` to 1e-13 |
+| `tests/verify_demo_render.py` | Gate: the demo page renders and populates in headless Chrome |
 
 ## Source modules
 
@@ -38,6 +42,7 @@ production (AUC 0.911) selects the discriminatory model; the governed model scor
 | `monitor.py` | PSI/KS drift, fairness SLO, incident routing, feedback controls |
 | `sustainability.py` | Whole-pipeline energy and carbon accounting |
 | `figures.py` | Report figures |
+| `export_web_model.py` | Exports model params to `docs/model.json` for the browser demo |
 
 ## Reproducing
 
@@ -47,10 +52,33 @@ cd src
 python3 generate_data.py && python3 train.py && python3 fairness.py \
   && python3 significance.py && python3 explain.py && python3 monitor.py \
   && python3 sustainability.py && python3 figures.py
+python3 export_web_model.py                 # refresh the browser demo's parameters
 cd ../tests && python3 verify_report.py     # 64/64 checks
+python3 verify_web_demo.py                  # browser JS == scikit-learn
+python3 verify_demo_render.py               # demo page renders correctly
 ```
 
 Seeded at 42; verified to reproduce identical metrics across a clean rebuild.
+
+## The interactive demo
+
+[`docs/demo.html`](docs/demo.html) scores applicants against both models in the browser, with no
+server. The production candidate is a logistic regression — a standardizer, a weight vector and
+an isotonic calibration curve — so it ports to JavaScript exactly rather than approximately.
+`export_web_model.py` writes those parameters to `docs/model.json` and refuses to emit a file
+unless dependency-free arithmetic reproduces `CalibratedClassifierCV.predict_proba` on all 2,400
+test applicants (currently exact, `0.00e+00`).
+
+`tests/verify_web_demo.py` closes the loop from the other side: it cuts the scoring functions out
+of the shipped `demo.html` by brace matching and runs *those exact characters* under Node against
+scikit-learn. Agreement is 1e-13 — float64 rounding. The same closed form yields exact Shapley
+values, since for a linear model `phi_j = coef_j * (z_j - E[z_j])`; no sampling, no `shap`
+dependency.
+
+The demo's point is the proxy-leverage panel. For the borderline applicant it opens on, an
+internal referral moves the naive model by **+44.8 percentage points** and the governed model by
+**0.0** — not because the governed model weights it near zero, but because the feature is absent
+from its input space entirely.
 
 ## Key results
 

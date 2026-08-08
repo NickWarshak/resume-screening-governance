@@ -1,5 +1,10 @@
 # Responsible AI Resume Screening — Governance Project
 
+**Live site → <https://nickwarshak.github.io/resume-screening-governance/>**
+&nbsp;·&nbsp; [Report](https://nickwarshak.github.io/resume-screening-governance/report.html)
+&nbsp;·&nbsp; [Notebook](https://nickwarshak.github.io/resume-screening-governance/notebook.html)
+&nbsp;·&nbsp; [Model card](https://nickwarshak.github.io/resume-screening-governance/model-card.html)
+
 A predictive classification system for ranking software-engineering applicants, built as a
 demonstration of responsible AI development, deployment, and governance.
 

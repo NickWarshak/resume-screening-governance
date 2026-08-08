@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="utf-8"><title>AI Governance Report — Resume Screening</title>
+<html lang="en"><head><meta charset="utf-8"><title>Governance Report: Automated Resume Screening System</title>
 <style>
 @page { size: Letter; margin: 14mm 15mm 12mm 15mm; }
 * { box-sizing: border-box; }
@@ -20,7 +20,7 @@ p { margin: 0 0 5px 0; text-align: justify; hyphens: auto; }
 table { width: 100%; border-collapse: collapse; font-family: "DejaVu Sans", Helvetica, sans-serif;
         font-size: 7.85pt; margin: 5px 0 7px 0; break-inside: avoid; }
 th { text-align: left; border-bottom: 1.4px solid #16150f; padding: 4px 5px; font-weight: 600; }
-td { border-bottom: 0.7px solid #e6e4de; padding: 3px 5px; }
+td { border-bottom: 0.7px solid #e6e4de; padding: 3px 5px; vertical-align: top; }
 td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; }
 .fail { color: #b3201f; font-weight: 600; }
 .pass { color: #0f6b3f; font-weight: 600; }
@@ -75,366 +75,263 @@ code { font-family: "DejaVu Sans Mono", monospace; font-size: 8.3pt; background:
 </style></head><body>
 <a class="backlink" href="./">← Project home</a>
 
-<h1>Governance Report: An Automated Resume Screening System</h1>
-<p class="sub">Design, evaluation, and deployment controls for a high-risk AI system in employment</p>
-<div class="meta"><span><strong>Nick Warshak</strong> &nbsp;·&nbsp; 8 August 2026</span>
-<span>High-risk system — EU AI Act Annex III §4 · NYC Local Law 144 AEDT &nbsp;·&nbsp;
-Reference implementation, not approved for production</span></div>
+<h1>Governance Report: Automated Resume Screening System</h1>
+<p class="sub">Design, evaluation, and deployment controls for an AI system in recruitment</p>
+<div class="meta"><span><strong>Nick Warshak</strong> &nbsp;·&nbsp; August 2026</span>
+<span>Reference implementation, not approved for production</span></div>
 
-<h2>1. Model Overview</h2>
+<h2>Model Overview</h2>
 
 <h3>Problem statement</h3>
-<p>A large employer receives roughly 250,000 applications a year for software engineering
-requisitions and can afford human review of about a quarter of them. The task is to rank
-applicants so that recruiter attention goes where it is most likely to be productive.</p>
+<p>A large software company receives about 250,000 applications a year for software engineering.
+Due to the extremely large demand, they can only afford to have humans review a quarter of them.
+The task becomes to rank the top applicants automatically, so the recruiter sees all the best
+fits for the job.</p>
 
-<p>This is the domain where AI hiring has most visibly failed. Amazon abandoned an internal
-recruiting model in 2018 after discovering it penalized resumes containing the word
-<em>women's</em>. The instructive part is that the model was not broken. It was trained to
-reproduce ten years of human hiring decisions and it succeeded — the decisions were biased,
-so the model was biased. No amount of engineering rigor applied to the wrong objective would
-have caught it, because by every metric available in production the model was performing well.</p>
-
-<p>This project rebuilds that failure deliberately, measures it, and then constrains it, so
-each governance control can be evaluated against evidence rather than asserted.</p>
+<p>This is a domain in which AI has very publicly come up short. Amazon cut an internal
+recruitment model in 2018 when it found that the model deducted from an application with the
+word "women's". The model was trained on human decisions and had baked in human bias. This is
+clearly a problem as is, but it scales into a much larger problem as the ratio of the model's
+decisions to the model's training data gets larger and larger. This project is made to rebuild
+that failure by measuring the bias and then constraining it, so that governance can be evaluated
+against real evidence.</p>
 
 <h3>Data</h3>
-<p>Training uses a synthetic population of 12,000 applicants rather than a real resume corpus.
-This is a deliberate governance choice with two justifications. Real resumes contain personal
-information that cannot lawfully be repurposed for model training without consent. More
-importantly, real data never reveals <em>true</em> qualification — only whether someone was
-hired — which makes it impossible to prove a screening model is wrong. In a constructed
-population, latent qualification is known, and it is generated <strong>independent of
-protected class</strong>. There is no real ability difference between groups in this world, so
-every disparity the audit finds is measurement bias by construction, with nothing to argue
-about.</p>
+<p>The training uses a synthetic dataset of about 12,000 applicants rather than a real collection
+of resumes. This was a deliberate choice for two main reasons. First, real resumes contain data
+and information that can't, and shouldn't, be used for model training without consent. Moreover,
+a real dataset can never reveal true qualification, just if a candidate was hired. This is how
+bias gets baked into the formula early on. In a constructed dataset, qualification is known
+information and generated separate from the protected class. There is no true ability difference
+between groups in this world, so anything the audit finds is bias I put there on purpose and can
+measure.</p>
 
-<p>The training label is not "was this person good at the job." It is "did a recruiter advance
-this person to an onsite interview." That substitution — a proxy label standing in for the
-construct of interest — is the central governance flaw in commercial resume screeners, and it
-is reproduced here through four documented mechanisms: referral homophily, in which referrals
-flow through networks that mirror the existing workforce; an employment-gap penalty, where
-gaps are unequally distributed because caregiving is; a prestige proxy, since selective-school
-attendance tracks parental income and US wealth is racialized; and a residual direct penalty
-representing the name-based callback discrimination measured by Bertrand and Mullainathan
-(2004), who found identical resumes with White-sounding names drew 50% more callbacks.</p>
+<p>The training label has never been "was this person good at the job", but instead did this
+person get advanced by the recruiter. This brings in many biases which are not legal or
+productive for recruiting. Some of those include referrals, gaps, prestige, and distance.
+Referrals are internal references which are among the most obvious biases which clearly skew
+data against the best candidate. These are historically significant sources of unfairness and
+disparity which shouldn't need to be as prominent as they are now. Gaps are periods of time in
+which a candidate is not employed, often creating bias against candidates who had to step away
+from work for personal reasons. Prestige refers to the school which a candidate attended, which
+clearly has major socioeconomic and class factors. Distance is the kilometers from the work site
+that the candidate lives.</p>
 
-<h3>Model type and the decision that matters</h3>
-<p>Two models were trained to make the governance argument empirically. The <strong>naive</strong>
-model uses all sixteen available features, including four known demographic proxies
-(<code>referral</code>, <code>top_school</code>, <code>employment_gap_months</code>,
-<code>distance_from_office_km</code>). The <strong>governed</strong> model uses only the twelve
-merit-derived features. Both were fit as logistic regression and gradient boosting, calibrated
-isotonically on a held-out validation split, and evaluated on a 2,400-applicant test set.</p>
+<h3>Models</h3>
+<p>Two models were trained so that they could be easily compared to one another. The naïve model
+uses all sixteen available features, including the four previously mentioned biased factors. The
+governed model uses only the 12 merit-based features. Both were fit as a logistic regression and
+gradient boosting model and evaluated on a 2,400-applicant test set.</p>
 
 <table>
-<tr><th>Model</th><th class="n">AUC vs recruiter decisions</th><th class="n">AUC vs true qualification</th>
-<th class="n">Avg. precision</th><th class="n">Brier</th><th class="n">Precision @25%</th><th class="n">Recall @25%</th></tr>
-<tr><td>Naive logistic</td><td class="n">0.911</td><td class="n">0.915</td><td class="n">0.775</td><td class="n">0.098</td><td class="n">0.578</td><td class="n">0.879</td></tr>
-<tr><td>Naive GBM</td><td class="n">0.908</td><td class="n">0.921</td><td class="n">0.765</td><td class="n">0.101</td><td class="n">0.697</td><td class="n">0.716</td></tr>
-<tr><td><strong>Governed logistic</strong></td><td class="n">0.865</td><td class="n"><strong>0.961</strong></td><td class="n">0.680</td><td class="n">0.122</td><td class="n">0.556</td><td class="n">0.742</td></tr>
+<tr><th>Model</th><th class="n">AUC vs recruiter</th><th class="n">AUC vs merit</th>
+<th class="n">Precision</th><th class="n">Brier</th><th class="n">Precision @ 25%</th><th class="n">Recall @ 25%</th></tr>
+<tr><td>Naïve Logistic</td><td class="n">0.911</td><td class="n">0.915</td><td class="n">0.775</td><td class="n">0.098</td><td class="n">0.578</td><td class="n">0.879</td></tr>
+<tr><td>Naïve GBM</td><td class="n">0.908</td><td class="n">0.921</td><td class="n">0.765</td><td class="n">0.101</td><td class="n">0.697</td><td class="n">0.716</td></tr>
+<tr><td><strong>Governed Logistic</strong></td><td class="n">0.865</td><td class="n"><strong>0.961</strong></td><td class="n">0.680</td><td class="n">0.122</td><td class="n">0.556</td><td class="n">0.742</td></tr>
 <tr><td>Governed GBM</td><td class="n">0.859</td><td class="n">0.952</td><td class="n">0.663</td><td class="n">0.125</td><td class="n">0.612</td><td class="n">0.653</td></tr>
 </table>
 
-<div class="callout"><span class="lbl">Central finding</span>
-<p>The naive model is <strong>better</strong> at predicting what recruiters did (AUC 0.911 vs
-0.865) and <strong>worse</strong> at identifying who was actually qualified (0.915 vs 0.961).
-In production only the first column is observable. Standard model selection — pick the highest
-validation AUC — therefore selects the discriminatory model, and does so while every
-engineering practice is being followed correctly. Accuracy against a biased label is not a
-measure of quality; it is a measure of fidelity to the bias.</p></div>
+<p>The naïve model performed better at predicting what recruiters did, but worse at identifying
+who was actually qualified. In practice only the first column is observable. So standard practice
+would be to select the model which has the highest value. So, while following every best practice
+the company would select the discriminatory model. This shows that accuracy on a biased label is
+not a measure of true quality.</p>
 
 <figure><img src="figures/performance_tradeoff.png">
-<figcaption><strong>Figure 1.</strong> Grey bars are the only metric visible in production.
-Selecting on them ships the naive model. The governed logistic model — 2.1 KB, twelve
-features, fully interpretable — is the best model at the actual job.</figcaption></figure>
+<figcaption>The grey bars are the only thing a team can see in production. Picking on them ships
+the naïve model.</figcaption></figure>
 
-<p>The production candidate is the governed logistic regression. It was not chosen for
-simplicity; it won on the ground-truth metric, beating gradient boosting (0.961 vs 0.952). The
-interpretability and 2.1 KB footprint are consequences of that choice, not compromises made
-for it.</p>
+<p>The candidate that should be chosen is the governed logistic regression. It measures
+candidates most accurately against merit without getting lost to the noise of bias. It also
+happens to be the smallest and simplest model I trained, at 2.1 KB, which was not what I
+expected going in.</p>
 
-<h3>Fairness performance</h3>
-<p>Disparate impact was measured as NYC Local Law 144 requires: selection rates and impact
-ratios by sex, race/ethnicity, and their intersection. An impact ratio below 0.80 is prima
-facie evidence of adverse impact under the EEOC Uniform Guidelines (29 CFR 1607.4D).</p>
+<h3>Fairness</h3>
+<p>Fairness was measured as common practice in law, specifically NYC, which states: selection
+rates and impact ratios by sex, race/ethnicity, and their intersection. An impact ratio below
+0.80 is prima facie evidence of adverse impact under the EEOC Uniform Guidelines.</p>
 
 <table>
-<tr><th>System</th><th class="n">Sex</th><th class="n">Race/ethnicity</th><th class="n">Intersectional</th><th>Worst-affected group</th></tr>
-<tr><td>Human recruiters (status quo)</td><td class="n fail">0.607</td><td class="n fail">0.583</td><td class="n">—</td><td>—</td></tr>
-<tr><td>Naive model</td><td class="n fail">0.612</td><td class="n fail">0.633</td><td class="n fail">0.488</td><td>Female / Black</td></tr>
-<tr><td>Governed model</td><td class="n pass">0.967</td><td class="n pass">0.833</td><td class="n fail">0.652</td><td>Female / Hispanic-Latino</td></tr>
+<tr><th>System</th><th class="n">Sex</th><th class="n">Ethnicity</th><th class="n">Intersection</th><th>Most affected group</th></tr>
+<tr><td>Human recruiter</td><td class="n fail">0.607</td><td class="n fail">0.583</td><td class="n">—</td><td>—</td></tr>
+<tr><td>Naïve model</td><td class="n fail">0.612</td><td class="n fail">0.633</td><td class="n fail">0.488</td><td>Female / Black</td></tr>
+<tr><td>Governed model</td><td class="n pass">0.967</td><td class="n pass">0.833</td><td class="n fail">0.652</td><td>Female / Hispanic</td></tr>
 </table>
 
-<p>The naive model does not merely inherit human bias — at the intersection it
-<em>concentrates</em> it, reaching 0.488 against a human baseline of 0.583. Automation applied
-a biased rule more consistently than the humans did, which is what automation is for.</p>
+<p>The naïve model inherited human bias and then concentrated it, especially at the intersection.
+Automation also applied bias much more consistently and predictably than humans, which is what
+automation is made to do. The governed model served much better for sex and ethnicity alone, but
+still underperformed at the intersection.</p>
 
 <figure><img src="figures/impact_ratios.png">
-<figcaption><strong>Figure 2.</strong> Impact ratios by race/ethnicity. Removing four proxy
-features lifts every marginal group above the four-fifths threshold.</figcaption></figure>
+<figcaption>Impact ratios by ethnicity. Dropping the four biased features lifts every group above
+the 0.80 line.</figcaption></figure>
 
-<div class="callout warn"><span class="lbl">Unresolved disparity — disclosed, not fixed</span>
-<p>The governed model passes marginal audits for sex and race while still failing
-intersectionally: Female/Hispanic-Latino sits at 0.652 (95% CI 0.370–0.949), with an 87%
-bootstrap probability of a genuine four-fifths breach. Bootstrapping also shows the reverse
-error is possible — Hispanic/Latino applicants overall have a <em>passing</em> point estimate
-of 0.811 but a 46% probability the true ratio breaches. Reporting point estimates without
-intervals would have concealed both. This system has a known, measured, unremediated
-disparity, and no honest governance report can present feature removal as having solved
-fairness.</p></div>
+<div class="callout warn"><span class="lbl">Unresolved</span>
+<p>While the governed model certainly performed better on the fairness scale, the intersection
+remains an unfixed problem. I tried my best to fix it through a few different efforts, but
+nothing that didn't seem either like covering an issue or overfitting to fix an issue. It would
+have been dishonest to report anything else regarding the issue of intersection grading.</p></div>
 
-<h2>2. Explainability</h2>
+<h2>Explainability</h2>
 
-<p>Explainability serves two distinct jobs that are routinely conflated. <strong>Global</strong>
-explanation answers what the model relies on in aggregate; it is a bias-detection instrument.
-<strong>Local</strong> explanation answers why a specific applicant was scored as they were; it
-is a legal artifact, feeding the candidate-facing disclosures required under Illinois AIVIA and
-the EU AI Act. SHAP (Lundberg &amp; Lee, 2017) supplies both, using Shapley values from
-cooperative game theory to distribute a prediction across its input features with guarantees of
-local accuracy and consistency.</p>
+<p>Explainability has two distinct jobs that are often confused against each other. Global
+explainability is how the model makes decisions as a whole. Local explainability is the ability
+to track why a specific decision was made. Both of these are extremely important for my project.
+Global tracks how fair decisions are being made on average. Local is an important artifact for
+specific explanation.</p>
 
-<h3>What global SHAP caught</h3>
-<p>Applied to the naive model, SHAP found that <strong>37.7% of total attribution flowed
-through demographic proxies</strong>. Employee referral alone was the second most important
-feature in the model at 15.5% — ahead of relevant skills, education, and every measure of
-demonstrated work. A model whose second-strongest signal is "does this applicant know someone
-here" is a model that encodes network access as merit.</p>
+<h3>SHAP</h3>
+<p>SHAP is a way of measuring why the model did what it did by assigning a percentage value to
+each feature. SHAP found that 37.7% of total attribution flowed through our bias metrics for the
+naïve model, including employee referral which was the second most important feature behind
+keyword match at 15.5%. A model which takes referral as more important than skills, education,
+and demonstrated work fails to identify what makes a candidate's merit.</p>
 
 <figure><img src="figures/proxy_reliance.png">
-<figcaption><strong>Figure 3.</strong> Removing proxies redistributes attribution onto merit
-signals. Keyword match rises from 18.8% to 33.3% of the decision. Red bars are demographic
-proxies.</figcaption></figure>
+<figcaption>The naïve model on the left, the governed model on the right. Red bars are the biased
+features.</figcaption></figure>
 
-<p>This is the diagnostic that a fairness metric alone would not have produced. An impact ratio
-tells you the outcome is skewed; SHAP tells you <em>which feature is doing it</em>, which is
-what makes remediation possible rather than merely detectable.</p>
+<p>The charts for both models clearly illustrate the difference in fairness and justification.
+The naïve model takes all four biased metrics as some of the most important, putting many of them
+above education, projects, and skill. The governed model much more fairly distributes job match,
+then skill match, then education, projects, etc. Keyword match goes from 18.8% of the decision to
+33.3% once the biased features are gone. This visualizes the difference between the two models
+very well.</p>
 
-<h3>Local explanation and adverse action</h3>
-<p>For each applicant the system produces a ranked attribution of the factors that most reduced
-their score, rendered as plain language. A representative output for a borderline applicant
-scoring 0.297: education level (−0.168), leadership indicators (−0.063), prior roles (−0.053),
-certifications (−0.014). Every factor cited is a resume attribute the applicant can see,
-verify, and contest.</p>
+<h2>Guardrails</h2>
 
-<div class="callout warn"><span class="lbl">The most common misuse of explainability</span>
-<p>SHAP explains the <strong>model</strong>, not the <strong>world</strong>. An attribution of
-+0.30 for <code>referral</code> means the model raised its score because the applicant was
-referred. It does not mean referrals cause job success. Treating SHAP attributions as causal
-evidence is how an organization convinces itself that a biased feature is a legitimate one —
-the explanation becomes a justification, and the tool built to catch the problem is used to
-launder it. Attributions are therefore reported to reviewers with the causal disclaimer
-attached, and feature-inclusion decisions are made on documented job-relatedness grounds, never
-on SHAP importance.</p></div>
-
-<h2>3. Guardrails</h2>
-
-<p>The load-bearing design decision is architectural rather than statistical: <strong>the model
-cannot reject anyone</strong>. It emits a ranked shortlist and a routing recommendation. There
-is deliberately no code path returning <code>REJECT</code>. This is what keeps the tool a
-ranking aid rather than an automated employment decision, and it is the control that most
-directly limits worst-case harm — because the dominant risk here is not a wrong score, it is a
-wrong score acted on automatically, at scale, with no human in the loop and no applicant
-recourse.</p>
+<p>The most important design choice made with my model was not allowing it to reject candidates.
+It outputs a shortlist and recommendations, but it was specifically made not to have any code
+allowing it to reject. This keeps the tool as a ranking tool and not an automated decision maker.
+This way, the people who have expertise in the area can choose which and how many candidates they
+want to review.</p>
 
 <table>
 <tr><th>Layer</th><th>Control</th><th>Measured behavior</th></tr>
-<tr><td>1. Input validation</td><td>Range and null checks on all 12 features</td><td>Malformed records route to manual review; never scored</td></tr>
-<tr><td>2. Adversarial detection</td><td>Prompt injection, hidden text, keyword stuffing, zero-width characters</td><td>7 of 7 red-team cases pass</td></tr>
-<tr><td>3. Proxy monitoring</td><td>Continuous test for features becoming demographically predictive</td><td>11 of 48 feature-attribute pairs flagged</td></tr>
-<tr><td>4. Abstention band</td><td>Model declines to rank scores in 0.25–0.55</td><td>22.8% of applicants route to unaided human review</td></tr>
-<tr><td>5. Output constraints</td><td>No auto-reject; batch circuit breaker on four-fifths breach</td><td>Naive-model batches held; governed batches release</td></tr>
-<tr><td>6. Scope limits</td><td>Restricted to software engineering requisitions</td><td>Out-of-scope use blocked, not degraded</td></tr>
+<tr><td>Input validation</td><td>Range and null checks on all features.</td><td>Odd records default to manual review.</td></tr>
+<tr><td>Adversarial detection</td><td>Prompt injection, hidden text, keyword stuffing, etc.</td><td>7 of 7 red-team cases pass.</td></tr>
+<tr><td>Proxy monitoring</td><td>Continuous test for features becoming predictive by group.</td><td>11 of 48 feature-attribute pairs flagged.</td></tr>
+<tr><td>Abstention band</td><td>Model declines to rank scores 0.25–0.55.</td><td>22.8% of applicants route to human review.</td></tr>
+<tr><td>Output constraints</td><td>No auto reject.</td><td>Naïve model output held, governed model released.</td></tr>
+<tr><td>Scope limits</td><td>Restricted to software engineering applications.</td><td>Out of scope use blocked.</td></tr>
 </table>
 
 <h3>Red teaming</h3>
-<p>Prompt injection is a live threat in this system, not a hypothetical one. Any pipeline that
-passes resume text to a language model for parsing or summarization is a pipeline where
-<strong>the applicant controls part of the prompt</strong>. The suite tests direct injection,
-role-reassignment injection, white-on-white hidden keyword blocks, zero-width character
-obfuscation, and keyword flooding, alongside benign resumes that must not trigger.</p>
+<p>Prompt injection is a great threat to systems like this one. Many applicants will try many
+different tricks to get scored highly by the automated model, which goes against the point of
+having one in the first place. Because of this, I set up red teams, which is a test suite which
+can detect things like prompt injection, hidden text, and keyword stuffing.</p>
 
-<div class="callout"><span class="lbl">Finding RT-07 — the defect was in the defense</span>
-<p>An early revision of the injection filter matched the bare phrase <code>prompt injection</code>.
-This flagged a legitimate ML-security engineer whose resume described red-teaming language
-models as their actual job. The guardrail discriminated against applicants working in AI
-safety — a filter built to prevent unfairness was itself producing it. The fix keys detection
-on instructional framing directed at the system rather than on subject matter, and RT-07 is
-retained as a permanent regression test. This is the argument for red teaming in one case:
-the failure was not in the model, and no fairness metric would ever have surfaced it.</p></div>
+<p>Worth noting an experience I had while building this in which the tests were directly deducing
+candidates who worked in ML/AI safety due to the phrases in their resume surrounding prompt
+injection etc. This forced me to rethink the way that the model worked. Now the system detects
+framing rather than just subject matter. I kept that case in the test suite so it can't come
+back.</p>
 
-<h2>4. Monitoring Plan</h2>
+<h2>Monitoring Plan</h2>
 
-<p>Resume screening drifts in ways that generic ML monitoring misses. Three failure modes each
-require their own detector. <strong>Feature drift</strong> — the applicant pool changes — is
-caught by Population Stability Index and Kolmogorov-Smirnov tests. <strong>Label drift</strong>
-— what recruiters reward changes — silently invalidates the model with no feature moving at
-all. <strong>Fairness drift</strong> is the one that matters most and is monitored least.</p>
+<p>Resume screening drifts in three main ways. Three failure modes each require their own detector
+so that we know when to fix them. The first way is feature drift, which is when the applicant pool
+changes. Next is label drift, which is when what recruiters reward changes. Final is fairness
+drift, which is when the model fits itself onto prejudice and bias decision making.</p>
 
 <figure><img src="figures/monitoring_timeline.png">
-<figcaption><strong>Figure 4.</strong> Six simulated months under a compounding drift scenario
-(a sector layoff shifting the pool toward senior candidates with recent employment gaps).</figcaption></figure>
+<figcaption>Six simulated months. Accuracy holds flat the whole way while fairness and drift move
+independently of it.</figcaption></figure>
 
-<p>The simulation demonstrates the decoupling in both directions. At month 2 the fairness SLO
-breaches — race impact ratio 0.779 — while AUC sits at a healthy 0.867 and maximum feature PSI
-is 0.065, <em>below even the warning band</em>. A conventional performance dashboard displays
-all-green throughout an active four-fifths breach. By month 6 the inverse holds: PSI reaches
-0.683, well past the alert threshold, while AUC is unmoved at 0.868 — drift alarms firing with
-no performance degradation at all, and a calendar-driven retrain would have burned energy for
-no benefit. Neither condition is visible from the other's dashboard, which is why the impact
-ratio is treated here as a first-class service-level objective rather than a quarterly report.</p>
+<p>The simulation demonstrates the distinction between accuracy and fairness. In month 2 the race
+impact ratio dips below 80% to 0.779, which is a major red flag event. Still, the accuracy
+measures both remain in healthy places, with AUC at 0.867 and maximum feature PSI at 0.065, much
+below the warning band. By month 6 it runs the other way, with PSI at 0.683 and AUC unmoved at
+0.868. This showcases why we need different tests for different modes of drift.</p>
 
 <table>
 <tr><th>Trigger</th><th>Severity</th><th>Response</th></tr>
-<tr><td>PSI ≥ 0.10 on any feature</td><td>P3</td><td>Data science review within 5 business days</td></tr>
-<tr><td>PSI ≥ 0.25 on any feature</td><td>P2</td><td>Retraining assessment opened; recruiters notified</td></tr>
-<tr><td>AUC drops &gt; 0.05 from baseline</td><td>P2</td><td>Model owner review; rollback considered</td></tr>
-<tr><td>Impact ratio &lt; 0.80, any attribute</td><td>P1</td><td>Shortlist auto-widened; Legal and HR notified within 24 h</td></tr>
-<tr><td>Impact ratio &lt; 0.70, any attribute</td><td>P0</td><td><strong>Kill switch</strong> — model disabled, 100% human screening</td></tr>
-<tr><td>Adversarial flag rate &gt; 3× baseline</td><td>P2</td><td>Security review of the intake pipeline</td></tr>
+<tr><td>PSI ≥ 0.10 on any feature</td><td>P3</td><td>Data science review</td></tr>
+<tr><td>PSI ≥ 0.25 on any feature</td><td>P2</td><td>Retraining assessment</td></tr>
+<tr><td>AUC drops &gt; 0.05 from baseline</td><td>P2</td><td>Model owner review</td></tr>
+<tr><td>Impact ratio &lt; 0.80</td><td>P1</td><td>Shortlist auto widened</td></tr>
+<tr><td>Impact ratio &lt; 0.70</td><td>P0</td><td>Model disabled until fixed</td></tr>
+<tr><td>Adversarial flag rate &gt; 3x baseline</td><td>P2</td><td>Security review</td></tr>
 </table>
 
-<h3>Breaking the feedback loop</h3>
-<p>The model's shortlists become the next cycle's training labels, which makes the system
-self-confirming unless the loop is broken deliberately: the model proposes, the recruiter
-ratifies, the ratification trains the successor. Three controls address this. A
-<strong>randomized 5% holdout</strong> is screened by humans with model output hidden,
-preserving an unbiased label stream — a permanent operating cost, not a pilot phase.
-<strong>Outcome labels replace screening labels</strong> wherever twelve-month performance and
-retention data exist, and any substitution is recorded in the model card.
-<strong>Rejected-candidate sampling</strong> interviews a stratified sample of low-scored
-applicants each quarter, to estimate the false-negative rate the system otherwise never
-observes — because a screening model receives no natural feedback about the people it screened
-out, and that is precisely the population where its errors matter most.</p>
+<h2>Compliance &amp; Documentation</h2>
 
-<h2>5. Compliance and Documentation</h2>
-
-<p>Automated employment decision tools sit in one of the most densely regulated corners of
-applied AI, and the obligations are concrete rather than aspirational.</p>
+<p>An automated employment decision tool should be a very regulated applied AI feature and the
+obligations I made are concrete. These decisions were made based on existing laws surrounding
+this topic.</p>
 
 <table>
-<tr><th>Regime</th><th>Obligation</th><th>How this system responds</th></tr>
-<tr><td>NYC Local Law 144</td><td>Annual independent bias audit, publicly posted; 10-business-day candidate notice</td><td>Audit pipeline is executable and versioned; impact ratios computed by sex, race, and intersection</td></tr>
-<tr><td>EEOC Uniform Guidelines (29 CFR 1607)</td><td>Four-fifths rule; validation evidence for any selection procedure with adverse impact</td><td>Impact ratios tracked continuously as an SLO; job-relatedness documented per feature</td></tr>
-<tr><td>Title VII / ADEA / ADA</td><td>No disparate treatment or unjustified disparate impact</td><td>Protected attributes excluded from features; retained solely in a segregated audit store</td></tr>
-<tr><td>Illinois AIVIA (820 ILCS 42)</td><td>Notice, explanation, and consent for AI analysis</td><td>SHAP-derived candidate-facing explanations generated per applicant</td></tr>
-<tr><td>Colorado SB 24-205</td><td>Duty of reasonable care against algorithmic discrimination; impact assessments</td><td>Impact assessment is this document; residual disparity disclosed rather than omitted</td></tr>
-<tr><td>EU AI Act, Annex III §4</td><td>High-risk classification: risk management, data governance, logging, human oversight</td><td>Human oversight is architectural — no automated rejection path exists</td></tr>
+<tr><th>Policy</th><th>Obligation</th><th>System response</th></tr>
+<tr><td>NYC Local Law 144</td><td>Annual independent bias audit.</td><td>Audit pipeline is executable and versioned.</td></tr>
+<tr><td>EEOC Uniform Guidelines</td><td>Four-fifths rule; validation evidence for any selection procedure.</td><td>Impact ratios tracked continuously.</td></tr>
+<tr><td>Title VII</td><td>No disparate treatment or unjustified disparate impact.</td><td>Protected attributes excluded from features.</td></tr>
+<tr><td>Illinois AIVIA</td><td>Notice, explanation, and consent for AI analysis.</td><td>Candidate explanations generated per applicant.</td></tr>
+<tr><td>Colorado SB 24-205</td><td>Duty of reasonable care against algorithmic discrimination.</td><td>Impact assessed in this document.</td></tr>
 </table>
 
-<h3>Auditability</h3>
-<p>Every scoring event writes an immutable record containing the model version hash, feature
-vector, calibrated score, routing action, guardrail flags raised, and the identity of the human
-who made the resulting decision. Records are retained for the applicable statutory limitations
-period. The bias audit is code, not a document — it re-executes against any scored cohort and
-produces the same tables in this report, which means an external auditor can reproduce the
-findings rather than accept them.</p>
+<h3>Auditability &amp; Transparency</h3>
+<p>Every scoring event writes a record of important data including the model version, feature
+vector, score, routing action, guardrail flags raised, etc. Records are retained for long enough
+to be used in any legal dispute. The bias argument is all code, not a document, which executes
+against any scored group and produced the tables and metrics in this report.</p>
 
-<h3>Transparency, and its honest limits</h3>
-<p>Applicants are told before submission that an automated tool assists screening, which
-qualifications it assesses, that no rejection is automated, and how to request human review.
-The candidate-facing explanation names real resume attributes. But transparency is not the same
-as recourse: telling an applicant their score was reduced by "leadership indicators" is only
-meaningful if that judgment is contestable, so every explanation is issued with a route to
-human reconsideration. An explanation with no appeal attached is a courtesy, not a safeguard.</p>
+<p>Applicants are told before the submission that an automated tool assists in screening. They
+are also told which qualifications it assesses and that no rejection is automated. This allows
+the candidates to understand the nature of the process before being left curious as to how they
+weren't selected for their aspired posting.</p>
 
-<h3>Governance structure</h3>
-<p>A named model owner in data science holds technical accountability; HR leadership owns the
-deployment decision; Legal signs off on the bias audit before each release; and an
-Ethics/Responsible AI review board holds an independent veto. Deployment requires all four,
-and the kill-switch authority sits with the model owner, exercisable without escalation —
-because a control that requires a committee to convene is not available at the moment it is
-needed.</p>
+<h2>Sustainability</h2>
 
-<h2>6. Sustainability</h2>
-
-<p>The system was instrumented for training time, model size, inference latency, and estimated
-energy. Energy is derived from measured CPU time, a 15 W per-core figure, and a datacenter PUE
-of 1.12, converted at the US average grid intensity of 369 gCO₂e/kWh. These are estimates from
-disclosed assumptions rather than instrumented power draw — a sustainability number whose
-assumptions are hidden is decoration.</p>
+<p>The system measured training time, model size, latency, and estimated energy consumption.
+Energy consumption came from the measured CPU time. These estimates speak to the sustainability
+of the project.</p>
 
 <table>
-<tr><th>Model</th><th class="n">Train CPU (s)</th><th class="n">Size (KB)</th><th class="n">Inference (ms/1k)*</th><th class="n">Train energy (Wh)</th></tr>
-<tr><td><strong>Governed logistic</strong> (production)</td><td class="n">0.02</td><td class="n">2.1</td><td class="n">≈0.7</td><td class="n">0.0001</td></tr>
-<tr><td>Governed GBM</td><td class="n">0.34</td><td class="n">201.9</td><td class="n">2.86</td><td class="n">0.0016</td></tr>
-<tr><td>Naive GBM</td><td class="n">0.33</td><td class="n">240.9</td><td class="n">3.17</td><td class="n">0.0015</td></tr>
+<tr><th>Model</th><th class="n">Train CPU (s)</th><th class="n">Size (KB)</th><th class="n">Inference (ms / 1k)</th><th class="n">Train energy (Wh)</th></tr>
+<tr><td>Governed logistic</td><td class="n">0.02</td><td class="n">2.1</td><td class="n">0.6</td><td class="n">0.0001</td></tr>
+<tr><td>Governed GBM</td><td class="n">0.37</td><td class="n">201.9</td><td class="n">2.71</td><td class="n">0.0017</td></tr>
+<tr><td>Naïve GBM</td><td class="n">0.39</td><td class="n">240.9</td><td class="n">3.40</td><td class="n">0.0018</td></tr>
 </table>
-
-<p style="font-size:8.2pt;color:#52514e;margin-top:-4px">* Inference timings are wall-clock
-measurements and vary by a few percent between runs; figures are means over 20 repetitions.</p>
-<div class="callout warn"><span class="lbl">A correction that changed the conclusion</span>
-<p>An earlier revision of this analysis counted only the model's own arithmetic and produced a
-defensible-looking claim of an eight-order-of-magnitude advantage over an LLM-based screener.
-That was dishonest accounting: it omitted the parsing, serialization, and logging that dominate
-the pipeline. Priced across the whole serving envelope, the advantage is roughly
-<strong>403× to 4,019×</strong> — 0.19 kWh per year against 75–750 kWh. Still decisive, and it
-has the advantage of being true.</p></div>
 
 <figure><img src="figures/energy_comparison.png">
-<figcaption><strong>Figure 5.</strong> Annual pipeline energy at 250,000 resumes/year. Both
-bars carry identical parsing and serving overhead.</figcaption></figure>
+<figcaption>Annual energy at 250,000 resumes a year. Both bars carry the same parsing and serving
+cost, so only the scoring step differs.</figcaption></figure>
 
-<p>The more useful finding is what the breakdown reveals: <strong>the model accounts for
-0.0004% of pipeline energy</strong>. Resume parsing is 140 Wh a year and serving overhead 47 Wh,
-against 0.001 Wh for scoring. Further optimization of the model would be optimizing the wrong
-thing entirely — the leverage is in the pipeline around it, and an efficiency program aimed at
-the model would consume engineering effort for no measurable gain.</p>
+<p>The project is clearly environmentally sustainable over time, especially when compared to its
+automated counterparts. The whole pipeline runs at 0.19 kWh a year, which is somewhere between
+403 and 4,019 times less than sending every resume to a language model. This is mostly intuitive
+as the governed model simply has less features to navigate and a logistic model requires less
+calculation (generally) than a GBM.</p>
 
-<p>Five strategies follow. The model is right-sized — the 2.1 KB logistic regression beat
-gradient boosting on true qualification, so the smallest and most interpretable option was also
-the most accurate. No language model sits in the scoring path; parsing results are cached, so
-re-scoring costs nothing. Retraining is drift-triggered rather than nightly — month-6 drift did
-not degrade AUC, so a calendar-driven retrain would have spent energy for no benefit. Inference
-runs in nightly batches on interruptible capacity. And training is placed in a low-carbon
-region, cutting emissions from 68.9 to 6.0 gCO₂e a year, a 91% reduction at no accuracy
-cost.</p>
+<p>One thing I want to be honest about is that the model itself is a rounding error here. The
+scoring math is 0.0004% of the pipeline's energy. Parsing the resumes is what actually costs
+something. If I had only counted the model I could have claimed a much bigger number, but it
+would not have been a real one.</p>
 
-<p>One boundary should be stated plainly. The dominant footprint of this system is not compute
-at all — it is the human review time the design deliberately preserves. Claiming a carbon win
-while mandating additional human review would be an incomplete accounting. The efficiency
-argument here is real but modest in absolute terms; it is not the reason to build the system
-this way, and presenting it as such would overstate the case.</p>
+<h2>Conclusion</h2>
 
-<h2>7. Conclusion</h2>
+<p>Overall, I found that my governed model significantly outperformed the naïve model. It was
+more fair toward all people and more accurate to the metrics that truly counted. It did not fix
+the problem completely and namely was still biased against female Hispanics, and other
+intersections, which was a great disappointment for me. I have no doubt that with a small team
+this project could reach the point in which it could be fully deployed.</p>
 
-<table>
-<tr><th>Question</th><th>Evidence-based answer</th></tr>
-<tr><td>Does removing proxy features fix disparate impact?</td><td>Largely — worst race impact ratio moves 0.633 → 0.833, and sex 0.612 → 0.967</td></tr>
-<tr><td>Does it fix it completely?</td><td><strong>No.</strong> Female/Hispanic-Latino remains at 0.652, with 87% probability of genuine breach</td></tr>
-<tr><td>Does fairness cost accuracy?</td><td>Against the biased label, yes (−0.046 AUC). Against true qualification, <strong>no</strong> — it gains +0.046</td></tr>
-<tr><td>Is the system safe to deploy fully automated?</td><td><strong>No</strong> — and the architecture forecloses it</td></tr>
-</table>
-
-<p>The defensible conclusion is that this system is suitable for ranking and routing under human
-review, and is not suitable for automated rejection. That is a narrower claim than the one a
-vendor would make, and it is the claim the evidence supports. The temptation in a governance
-report is to present controls as having solved the problem; what the audit actually shows is a
-system substantially better than the human baseline it replaces, still carrying a measured and
-unremediated intersectional disparity, and safe to operate only because a human remains
-accountable for every rejection.</p>
-
-<p>The lesson generalizes past hiring. The naive model would have passed every conventional
-quality gate — higher AUC, higher average precision, better calibration, clean cross-validation.
-It was discriminatory precisely <em>because</em> it was accurate about a biased world. No amount
-of engineering rigor applied to the wrong objective will surface that, which is why governance
-must be an independent function with its own metrics and its own veto, rather than a review
-stage appended to a pipeline that has already chosen what to optimize.</p>
+<p>For now the honest answer is that this system belongs in front of a recruiter, not in place of
+one. It ranks and it routes, and a person still decides.</p>
 
 <div class="foot">
-<strong>Sources and references.</strong> Bertrand &amp; Mullainathan (2004), <em>Are Emily and
-Greg More Employable than Lakisha and Jamal?</em>, American Economic Review 94(4) ·
-Lundberg &amp; Lee (2017), <em>A Unified Approach to Interpreting Model Predictions</em>, NeurIPS ·
-Kleinberg, Mullainathan &amp; Raghavan (2016), <em>Inherent Trade-Offs in the Fair Determination
-of Risk Scores</em> · Rubineau &amp; Fernandez (2013), <em>Missing Links</em>, Management Science ·
-Dastin (2018), Reuters, on Amazon's scrapped recruiting tool · EEOC Uniform Guidelines on Employee Selection Procedures,
-29 CFR Part 1607 · NYC Local Law 144 of 2021 · Illinois Artificial Intelligence Video Interview
-Act, 820 ILCS 42 · Colorado SB 24-205 · EU Regulation 2024/1689 (AI Act), Annex III.
-<br><br>
-<strong>Reproducibility.</strong> Every figure and statistic here is generated by the
-accompanying code (<code>src/</code>) and notebook, seeded at 42; metrics are written to
+<strong>Reproducibility.</strong> Every figure and number in this report is generated by the
+accompanying code (<code>src/</code>) and notebook, seeded at 42. Metrics are written to
 <code>reports/*.json</code> and regenerate end to end via <code>src/generate_data.py</code> →
-<code>train.py</code> → <code>fairness.py</code>.
+<code>train.py</code> → <code>fairness.py</code>. A test in <code>tests/verify_report.py</code>
+checks the claims in this document against that computed output.
+<br><br>
+<strong>Scope.</strong> Training data is synthetic. The numbers demonstrate the method, they do
+not transfer to a real applicant pool. This is a reference implementation and is not approved for
+production use.
 </div>
 
 </body></html>

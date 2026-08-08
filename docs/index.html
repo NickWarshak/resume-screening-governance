@@ -3,9 +3,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Responsible AI Resume Screening — Governance Project</title>
-<meta name="description" content="The model that best predicts historical recruiter decisions is not the model that best identifies qualified candidates. A governance case study in AI hiring: fairness audit, SHAP explainability, guardrails, drift monitoring, and energy accounting.">
+<meta name="description" content="The model that best predicts what recruiters did is not the model that best finds qualified people. A governance project on AI in hiring: fairness audit, SHAP explainability, guardrails, drift monitoring, and energy accounting.">
 <meta property="og:title" content="Responsible AI Resume Screening — Governance Project">
-<meta property="og:description" content="Optimizing the only metric visible in production selects the discriminatory model. A full governance workup of an automated resume screener.">
+<meta property="og:description" content="Picking the model with the best visible number gets you the discriminatory one. A full governance workup of an automated resume screener.">
 <meta property="og:type" content="website">
 <style>
 :root {
@@ -142,15 +142,15 @@ footer { border-top: 1px solid var(--rule); margin-top: 46px; padding-top: 14px;
 
 <header>
   <div class="wrap">
-    <p class="eyebrow">AI Governance Case Study &middot; Employment</p>
+    <p class="eyebrow">AI Governance Project &middot; Hiring</p>
     <h1>Responsible AI Resume&nbsp;Screening</h1>
-    <p class="lede">Design, evaluation, and deployment controls for a high-risk AI system
-    in hiring — built so that every governance claim is checked against evidence rather
-    than asserted.</p>
+    <p class="lede">Design, evaluation, and deployment controls for an AI system in
+    recruitment, built so that every claim about governance is checked against evidence
+    instead of just asserted.</p>
     <div class="byline">
       <span><strong>Nick Warshak</strong></span>
-      <span>8 August 2026</span>
-      <span>EU AI Act Annex III §4 · NYC Local Law 144</span>
+      <span>August 2026</span>
+      <span>NYC Local Law 144 · EEOC Uniform Guidelines</span>
       <span class="tag">Reference implementation — not for production</span>
     </div>
   </div>
@@ -159,66 +159,65 @@ footer { border-top: 1px solid var(--rule); margin-top: 46px; padding-top: 14px;
 <div class="wrap">
 
 <div class="finding">
-  <span class="lbl">The central finding</span>
-  <p>The model that best predicts historical recruiter decisions is <strong>not</strong> the
-  model that best identifies qualified candidates.</p>
-  <p>Two models were trained on the same applicant population. The naive model scores higher
-  against recruiter decisions (AUC <strong>0.911</strong> vs 0.865) and lower against true
-  qualification (0.915 vs <strong>0.961</strong>). In production only the first number is
-  observable — so standard model selection, done correctly by every engineering measure, ships
-  the discriminatory model. Accuracy against a biased label is not a measure of quality; it is
-  a measure of fidelity to the bias.</p>
+  <span class="lbl">What I found</span>
+  <p>The model that best predicts what recruiters did is <strong>not</strong> the model that
+  best finds qualified people.</p>
+  <p>I trained two models on the same applicants. The naïve model scores higher against
+  recruiter decisions (AUC <strong>0.911</strong> vs 0.865) and lower against merit (0.915 vs
+  <strong>0.961</strong>). In production you only ever see the first number, so picking the
+  model with the best visible score gets you the discriminatory one, while every other part of
+  the process was done right. Accuracy on a biased label is not a measure of quality. It just
+  measures how well you copied the bias.</p>
 </div>
 
 <p style="font-size:10.2pt;color:var(--muted);font-family:'DejaVu Sans',Helvetica,sans-serif;">
-Training data is a synthetic population of 12,000 applicants in which latent qualification is
-known and generated independent of protected class — so every disparity the audit finds is
-measurement bias by construction.</p>
+The training data is a synthetic pool of 12,000 applicants where qualification is known and
+generated separately from protected class. There is no real ability difference between groups in
+this world, so anything the audit finds is bias I put there on purpose and can measure.</p>
 
 <p><a class="cta" href="demo.html">Run both models live <span>→ interactive demo</span></a></p>
-<p class="cta-note">Build a candidate, then flip a proxy feature. For the borderline applicant
-the demo opens on, an internal referral is worth <strong>+44.8 points</strong> of advancement
-probability to the naive model — and <strong>0.0</strong> to the governed one, which cannot see
-it. Scoring runs in your browser, and matches scikit-learn to within 1e-13.</p>
+<p class="cta-note">Build a candidate, then turn one of the biased features on. For the
+borderline applicant the demo opens on, an internal referral is worth <strong>+44.8 points</strong>
+to the naïve model and <strong>0.0</strong> to the governed one, because that feature is not in
+it. The scoring runs in your browser and matches scikit-learn to 1e-13.</p>
 
 <h2>Read the work</h2>
 
 <ul class="cards">
   <li class="card">
     <h3><a href="demo.html">Interactive demo</a></h3>
-    <p>Score a candidate against both models in real time, with exact per-feature
-    attributions and the live decision envelope — advance, abstain, or route to review.</p>
-    <span class="alt">Runs client-side &middot; no server</span>
+    <p>Score a candidate against both models at once and watch what each feature is doing.
+    Advance, abstain, or route to review, live.</p>
+    <span class="alt">Runs in your browser &middot; no server</span>
   </li>
   <li class="card">
     <h3><a href="report.html">Governance report</a></h3>
-    <p>The primary deliverable. Model overview, disparate-impact audit, explainability,
-    six guardrail layers, drift monitoring, and sustainability accounting.</p>
-    <span class="alt">Web edition &middot; <a href="report.pdf">PDF, 7 pages</a></span>
+    <p>The main deliverable. Model overview, the fairness audit, explainability, six guardrail
+    layers, the monitoring plan, compliance, and sustainability.</p>
+    <span class="alt">Web edition &middot; <a href="report.pdf">PDF</a></span>
   </li>
   <li class="card">
-    <h3><a href="notebook.html">Executed notebook</a></h3>
-    <p>The end-to-end pipeline with every output captured: data generation, dual evaluation,
-    fairness testing, SHAP, guardrails, and monitoring.</p>
-    <span class="alt">Static HTML &middot; runs seeded at 42</span>
+    <h3><a href="notebook.html">Notebook</a></h3>
+    <p>The whole pipeline end to end: building the data, training both models, the fairness
+    audit, SHAP, guardrails, and monitoring.</p>
+    <span class="alt">Static HTML &middot; seeded at 42</span>
   </li>
   <li class="card">
     <h3><a href="model-card.html">Model card</a></h3>
-    <p>Intended use and explicit out-of-scope uses, performance, known disparities that
-    remain unresolved, limitations, and regulatory posture.</p>
+    <p>What the model is for, what it is not for, how it performs, and the disparity that is
+    still there.</p>
     <span class="alt">Version 1.0 &middot; <a href="MODEL_CARD.md">Markdown source</a></span>
   </li>
   <li class="card">
     <h3><a href="#figures">Figures</a></h3>
-    <p>Eight generated charts: the performance trade-off, impact ratios, SHAP attribution
-    before and after governance, the drift timeline, and energy accounting.</p>
-    <span class="alt">All regenerated from <code>src/</code></span>
+    <p>Eight charts: the performance tradeoff, impact ratios, SHAP before and after, the
+    monitoring timeline, and energy.</p>
+    <span class="alt">All generated from <code>src/</code></span>
   </li>
   <li class="card">
     <h3><a href="https://github.com/NickWarshak/resume-screening-governance">Source code</a></h3>
-    <p>Ten Python modules — data generation, dual evaluation, fairness audit, bootstrap
-    intervals, SHAP, guardrails, drift monitoring, energy accounting — plus the 64-check
-    verification gate.</p>
+    <p>Ten Python modules covering the data, both models, the fairness audit, SHAP, guardrails,
+    monitoring and energy, plus the tests that check the report against them.</p>
     <span class="alt">GitHub &middot; Python, seeded at 42</span>
   </li>
 </ul>
@@ -227,24 +226,24 @@ it. Scoring runs in your browser, and matches scikit-learn to within 1e-13.</p>
 
 <div class="tablewrap">
 <table>
-  <caption>Impact ratios below 0.80 are prima facie evidence of adverse impact under the EEOC
-  Uniform Guidelines (29 CFR 1607.4D).</caption>
-  <tr><th>Metric</th><th class="n">Naive model</th><th class="n">Governed model</th></tr>
-  <tr><td>AUC vs recruiter decisions <em>(the only metric visible in production)</em></td>
+  <caption>An impact ratio below 0.80 is prima facie evidence of adverse impact under the EEOC
+  Uniform Guidelines.</caption>
+  <tr><th>Metric</th><th class="n">Naïve model</th><th class="n">Governed model</th></tr>
+  <tr><td>AUC vs recruiter decisions <em>(the only number you can see in production)</em></td>
       <td class="n">0.911</td><td class="n">0.865</td></tr>
-  <tr><td>AUC vs true qualification</td>
+  <tr><td>AUC vs merit</td>
       <td class="n">0.915</td><td class="n"><strong>0.961</strong></td></tr>
   <tr><td>Worst impact ratio — sex</td>
       <td class="n fail">0.612</td><td class="n pass">0.967</td></tr>
-  <tr><td>Worst impact ratio — race/ethnicity</td>
+  <tr><td>Worst impact ratio — ethnicity</td>
       <td class="n fail">0.633</td><td class="n pass">0.833</td></tr>
-  <tr><td>Worst impact ratio — intersectional</td>
+  <tr><td>Worst impact ratio — intersection</td>
       <td class="n fail">0.488</td><td class="n fail">0.652</td></tr>
-  <tr><td>SHAP attribution flowing through demographic proxies</td>
+  <tr><td>Attribution flowing through the biased features</td>
       <td class="n fail">37.7%</td><td class="n pass">0.0%</td></tr>
   <tr><td>Red-team cases passed</td>
-      <td class="n">—</td><td class="n">7 / 7</td></tr>
-  <tr><td>Annual pipeline energy at 250,000 resumes/year</td>
+      <td class="n">—</td><td class="n">7 of 7</td></tr>
+  <tr><td>Annual pipeline energy at 250,000 resumes a year</td>
       <td class="n">—</td><td class="n">0.19 kWh</td></tr>
 </table>
 </div>
@@ -255,100 +254,100 @@ it. Scoring runs in your browser, and matches scikit-learn to within 1e-13.</p>
   <li><figure>
     <a href="figures/performance_tradeoff.png"><img src="figures/performance_tradeoff.png"
        alt="Grouped bar chart comparing four models on AUC against recruiter decisions versus AUC against true qualification"></a>
-    <figcaption><strong>Performance trade-off.</strong> Grey bars are the only metric visible in
-    production. Selecting on them ships the naive model. The governed logistic model — 2.1 KB,
-    twelve features, fully interpretable — is the best model at the actual job.</figcaption>
+    <figcaption><strong>Performance tradeoff.</strong> The grey bars are the only thing a team
+    can see in production. Picking on them ships the naïve model. The governed logistic model is
+    2.1 KB, uses twelve features, and is the best one at the actual job.</figcaption>
   </figure></li>
 
   <li><figure>
     <a href="figures/impact_ratios.png"><img src="figures/impact_ratios.png"
        alt="Impact ratios by race and ethnicity for human recruiters, the naive model, and the governed model, against the 0.80 four-fifths threshold"></a>
-    <figcaption><strong>Impact ratios.</strong> By race/ethnicity. Removing four proxy features
-    lifts every marginal group above the four-fifths threshold.</figcaption>
+    <figcaption><strong>Impact ratios.</strong> By ethnicity. Dropping the four biased features
+    lifts every group above the 0.80 line.</figcaption>
   </figure></li>
 
   <li><figure>
     <a href="figures/proxy_reliance.png"><img src="figures/proxy_reliance.png"
        alt="Paired horizontal bar charts of feature attribution share for the naive and governed models, with demographic proxies highlighted in red"></a>
-    <figcaption><strong>Proxy reliance.</strong> Removing proxies redistributes attribution onto
-    merit signals. Keyword match rises from 18.8% to 33.3% of the decision. Red bars are
-    demographic proxies.</figcaption>
+    <figcaption><strong>What each model relies on.</strong> Taking the biased features out moves
+    the weight onto merit. Keyword match goes from 18.8% of the decision to 33.3%. Red bars are
+    the biased features.</figcaption>
   </figure></li>
 
   <li><figure>
     <a href="figures/shap_beeswarm_naive.png"><img src="figures/shap_beeswarm_naive.png"
        alt="SHAP beeswarm plot of feature attributions for the naive model"></a>
-    <figcaption><strong>SHAP attributions — naive model.</strong> Referral, school prestige, and
-    employment gap carry 37.7% of the decision between them.</figcaption>
+    <figcaption><strong>SHAP — naïve model.</strong> Referral, school prestige and employment
+    gap carry 37.7% of the decision between them.</figcaption>
   </figure></li>
 
   <li><figure>
     <a href="figures/shap_beeswarm_governed.png"><img src="figures/shap_beeswarm_governed.png"
        alt="SHAP beeswarm plot of feature attributions for the governed model"></a>
-    <figcaption><strong>SHAP attributions — governed model.</strong> The same view after the four
-    proxy features are removed: 0.0% of attribution flows through demographic proxies.</figcaption>
+    <figcaption><strong>SHAP — governed model.</strong> The same view once the four biased
+    features are gone. None of the decision runs through them.</figcaption>
   </figure></li>
 
   <li><figure>
     <a href="figures/shap_waterfall_local.png"><img src="figures/shap_waterfall_local.png"
        alt="SHAP waterfall plot decomposing a single borderline applicant's score into per-feature contributions"></a>
-    <figcaption><strong>Local explanation.</strong> A borderline applicant decomposed
-    feature by feature — the basis an adverse-action notice would have to cite.</figcaption>
+    <figcaption><strong>Local explanation.</strong> One borderline applicant broken down feature
+    by feature. This is what you would have to show a candidate who asked why.</figcaption>
   </figure></li>
 
   <li><figure>
     <a href="figures/monitoring_timeline.png"><img src="figures/monitoring_timeline.png"
        alt="Six-month monitoring timeline showing PSI drift, fairness SLO breaches, and incident routing"></a>
-    <figcaption><strong>Monitoring timeline.</strong> Six simulated months under a compounding
-    drift scenario — a sector layoff shifting the pool toward senior candidates with recent
-    employment gaps.</figcaption>
+    <figcaption><strong>Monitoring timeline.</strong> Six simulated months, with a layoff wave
+    pushing the applicant pool toward senior candidates with recent gaps. Accuracy holds flat the
+    whole way while fairness moves on its own.</figcaption>
   </figure></li>
 
   <li><figure>
     <a href="figures/energy_comparison.png"><img src="figures/energy_comparison.png"
        alt="Bar chart comparing annual energy consumption of the logistic pipeline against LLM-based screening"></a>
-    <figcaption><strong>Energy accounting.</strong> Annual pipeline energy at 250,000
-    resumes/year — 0.19 kWh, 403–4,019× below an LLM-based screener. Both bars carry identical
-    parsing and serving overhead.</figcaption>
+    <figcaption><strong>Energy.</strong> Annual pipeline energy at 250,000 resumes a year, which
+    comes out at 0.19 kWh. That is 403 to 4,019 times less than sending every resume to a
+    language model. Both bars carry the same parsing and serving cost.</figcaption>
   </figure></li>
 </ul>
 
-<h2>What this project does not claim</h2>
+<h2>What I did not fix</h2>
 
 <ol>
-  <li>The governed model <strong>still fails</strong> the four-fifths rule intersectionally for
-  Female / Hispanic-Latino applicants (0.652; 95% CI 0.370–0.949; 87% bootstrap probability of a
-  genuine breach). It passes marginal audits while failing this intersection. Disclosed, not
-  resolved.</li>
-  <li><code>years_experience</code> remains age-correlated (1.47 SD gap across age groups).
-  Retained on business-necessity grounds and monitored quarterly — a live ADEA exposure, not a
-  solved problem.</li>
-  <li>Training data is synthetic. The metrics demonstrate the governance method; they do not
-  transfer to a real applicant pool.</li>
-  <li>The system is suitable for <strong>ranking and routing under human review</strong>, not
-  automated rejection. The architecture contains no <code>REJECT</code> code path.</li>
+  <li>The governed model <strong>still fails</strong> at the intersection. Female / Hispanic
+  applicants come out at 0.652, with a 95% interval of 0.370–0.949 and an 87% chance the breach
+  is real rather than noise. It passes on sex and on ethnicity separately and fails on both
+  together. I tried a few things and none of them were honest fixes, so it is reported rather
+  than hidden.</li>
+  <li><code>years_experience</code> still moves with age group. I kept it because the job
+  genuinely needs it, but that is a real exposure and not a solved problem.</li>
+  <li>The data is synthetic. The numbers show that the method works. They do not tell you what
+  would happen on a real applicant pool.</li>
+  <li>This belongs <strong>in front of a recruiter, not in place of one</strong>. It ranks and it
+  routes. There is no code path in it that rejects anybody.</li>
 </ol>
 
-<h2>Reproducing</h2>
+<h2>Running it</h2>
 
-<p>Every figure and statistic on this site is generated by the accompanying code, seeded at 42,
-and gated by an automated check that 64 report claims match the computed metrics.</p>
+<p>Every figure and number on this site comes out of the code, seeded at 42, with a test that
+checks the report's claims against what the code actually computed.</p>
 
 <pre><code>pip install scikit-learn pandas numpy matplotlib shap scipy joblib
 cd src
 python3 generate_data.py &amp;&amp; python3 train.py &amp;&amp; python3 fairness.py \
   &amp;&amp; python3 significance.py &amp;&amp; python3 explain.py &amp;&amp; python3 monitor.py \
   &amp;&amp; python3 sustainability.py &amp;&amp; python3 figures.py
-cd ../tests &amp;&amp; python3 verify_report.py     # 64/64 checks</code></pre>
+cd ../tests &amp;&amp; python3 verify_report.py</code></pre>
 
-<p>Generated datasets and trained model artifacts are intentionally excluded from the repository;
-they rebuild deterministically from the commands above.</p>
+<p>The generated data and the trained model files are kept out of the repository on purpose. The
+commands above rebuild them and give the same numbers every time.</p>
 
 <footer>
-  <p><strong>Status.</strong> Reference implementation for governance demonstration. Not approved
-  for production use, and not a hiring tool. Training data is synthetic; no real applicant data
-  was used at any stage.</p>
-  <p>Nick Warshak · 2026 · Source, figures, and metrics regenerate end to end from
+  <p><strong>Status.</strong> This is a reference implementation built to demonstrate governance.
+  It is not approved for production and it is not a hiring tool. The training data is synthetic
+  and no real applicant data was used at any point.</p>
+  <p>Nick Warshak · 2026 · The source, figures and metrics all regenerate from
   <code>src/</code>.</p>
 </footer>
 

@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Screening bench — live model demo</title>
-<meta name="description" content="Score a candidate against both models in real time and watch the naive model react to demographic proxies while the governed model cannot.">
+<meta name="description" content="Score a candidate against both models at once and watch the naïve model react to the biased features while the governed model cannot see them at all.">
 <style>
 :root {
   --ink:#16150f; --muted:#52514e; --faint:#6b6a63; --rule:#d8d7d2; --hair:#e6e4de;
@@ -155,9 +155,9 @@ code { font-family:"DejaVu Sans Mono",ui-monospace,Consolas,monospace; font-size
 <header><div class="wrap">
   <a class="backlink" href="./">&larr; Project home</a>
   <h1>Screening bench</h1>
-  <p class="lede">Build a candidate and watch both models score them in real time. The
-  point of the exercise is the second panel: change a demographic proxy and the naive
-  model moves, while the governed model cannot see the change at all.</p>
+  <p class="lede">Build a candidate and watch both models score them at the same time. The
+  interesting part is the second panel. Change one of the biased features and the naïve model
+  moves, while the governed model cannot see the change at all.</p>
 </div></header>
 
 <div class="wrap">
@@ -171,24 +171,24 @@ code { font-family:"DejaVu Sans Mono",ui-monospace,Consolas,monospace; font-size
 
     <div class="panel">
       <h3>Merit features</h3>
-      <p class="hint">Twelve résumé attributes. Both models use all of these.</p>
+      <p class="hint">Twelve things off a résumé. Both models use all of them.</p>
       <div id="merit"></div>
     </div>
 
     <div class="panel proxy">
-      <h3>Demographic proxy features</h3>
-      <p class="hint">Four attributes that correlate with protected class in this population.
-      <strong>Only the naive model uses them</strong> — they were removed from the governed
-      model's feature set entirely, so it is structurally incapable of responding to them.</p>
+      <h3>The biased features</h3>
+      <p class="hint">Four attributes that track protected class in this applicant pool.
+      <strong>Only the naïve model uses them.</strong> They were taken out of the governed
+      model's feature set completely, so it has no way to respond to them at all.</p>
       <div id="proxies"></div>
     </div>
 
     <div class="panel">
-      <h3>Proxy leverage for this candidate</h3>
-      <p class="hint">How much each proxy is worth, in calibrated probability points, if flipped
-      from its low value to its high value while everything else is held fixed.</p>
+      <h3>What each biased feature is worth here</h3>
+      <p class="hint">How many points each one moves the score if you flip it from its low value
+      to its high value and leave everything else alone.</p>
       <table class="lev">
-        <thead><tr><th>Proxy feature</th><th class="n">Naive model</th><th class="n">Governed</th></tr></thead>
+        <thead><tr><th>Biased feature</th><th class="n">Naïve model</th><th class="n">Governed</th></tr></thead>
         <tbody id="leverage"></tbody>
       </table>
     </div>
@@ -200,7 +200,7 @@ code { font-family:"DejaVu Sans Mono",ui-monospace,Consolas,monospace; font-size
     <div class="score gov">
       <div class="score-head">
         <span class="score-name">Governed model</span>
-        <span class="score-tag">Production candidate</span>
+        <span class="score-tag">The one to ship</span>
       </div>
       <div class="score-num" id="gov-num">—<span class="delta" id="gov-delta"></span></div>
       <div class="bar"><span id="gov-bar" style="width:0"></span></div>
@@ -210,8 +210,8 @@ code { font-family:"DejaVu Sans Mono",ui-monospace,Consolas,monospace; font-size
 
     <div class="score naive">
       <div class="score-head">
-        <span class="score-name">Naive model</span>
-        <span class="score-tag">Higher AUC · rejected</span>
+        <span class="score-name">Naïve model</span>
+        <span class="score-tag">Better AUC · not shipped</span>
       </div>
       <div class="score-num" id="nai-num">—<span class="delta" id="nai-delta"></span></div>
       <div class="bar"><span id="nai-bar" style="width:0"></span></div>
@@ -221,9 +221,9 @@ code { font-family:"DejaVu Sans Mono",ui-monospace,Consolas,monospace; font-size
     <div class="note warn" id="divergence"></div>
 
     <div class="panel">
-      <h3>Why the governed model scored this</h3>
-      <p class="hint">Exact per-feature contribution to the log-odds. For a linear model these
-      <em>are</em> the Shapley values — computed in closed form, not sampled.</p>
+      <h3>Why the governed model gave this score</h3>
+      <p class="hint">What each feature contributed. For a model this simple these are the exact
+      SHAP values, worked out directly rather than estimated by sampling.</p>
       <div class="contrib" id="contrib"></div>
     </div>
    </div>
@@ -232,13 +232,13 @@ code { font-family:"DejaVu Sans Mono",ui-monospace,Consolas,monospace; font-size
 </div>
 
 <footer>
-  <p>Scoring runs entirely in your browser. The standardizer, coefficients and isotonic
-  calibration curve are exported from the trained scikit-learn pipeline by
-  <code>src/export_web_model.py</code>, which aborts unless this arithmetic reproduces
-  <code>predict_proba</code> on all 2,400 test applicants — it currently matches to
-  <strong>0.00e+00</strong>, bit for bit.</p>
-  <p>Synthetic data throughout. Reference implementation — not a hiring tool, and not
-  approved for production use.</p>
+  <p>All of the scoring happens in your browser. The standardizer, the weights and the
+  calibration curve come straight out of the trained scikit-learn model via
+  <code>src/export_web_model.py</code>, which refuses to write the file at all unless this
+  arithmetic reproduces <code>predict_proba</code> on all 2,400 test applicants. Right now it
+  matches exactly, <strong>0.00e+00</strong>.</p>
+  <p>Synthetic data throughout. This is a reference implementation. It is not a hiring tool and
+  it is not approved for production use.</p>
 </footer>
 </div>
 
@@ -379,7 +379,7 @@ code { font-family:"DejaVu Sans Mono",ui-monospace,Consolas,monospace; font-size
     }
     var pc = percentile(m, p);
     document.getElementById(prefix + "-sub").innerHTML =
-      "Calibrated probability of advancing to onsite &middot; ranks above <strong>" +
+      "Calibrated chance of being advanced &middot; ranks above <strong>" +
       pc + "%</strong> of the 2,400-applicant test set";
   }
 
@@ -387,13 +387,13 @@ code { font-family:"DejaVu Sans Mono",ui-monospace,Consolas,monospace; font-size
     var el = document.getElementById("gov-action");
     if (p >= 0.55) {
       el.className = "action advance";
-      el.innerHTML = "ADVANCE RECOMMENDED<small>Above the 0.55 threshold. Still requires human sign-off.</small>";
+      el.innerHTML = "ADVANCE RECOMMENDED<small>Above the 0.55 line. A person still has to sign off on it.</small>";
     } else if (p >= 0.25) {
       el.className = "action abstain";
-      el.innerHTML = "ABSTAIN &rarr; HUMAN REVIEW<small>Inside the 0.25–0.55 uncertainty band. The model declines to rank; the score is withheld from the recruiter.</small>";
+      el.innerHTML = "ABSTAIN &rarr; HUMAN REVIEW<small>Inside the 0.25–0.55 band. The model declines to rank this one and the recruiter never sees the score.</small>";
     } else {
       el.className = "action low";
-      el.innerHTML = "LOW-PRIORITY REVIEW<small>Below the band. Note this is not a rejection — the architecture contains no REJECT path.</small>";
+      el.innerHTML = "LOW-PRIORITY REVIEW<small>Below the band. This is not a rejection. There is no code path in the system that rejects anybody.</small>";
     }
   }
 
@@ -444,15 +444,15 @@ code { font-family:"DejaVu Sans Mono",ui-monospace,Consolas,monospace; font-size
     var el = document.getElementById("divergence");
     if (Math.abs(gap) < 2) {
       el.innerHTML = "The two models agree on this candidate to within " +
-        Math.abs(gap).toFixed(1) + " points. Try switching a proxy on or off.";
+        Math.abs(gap).toFixed(1) + " points. Try turning one of the biased features on or off.";
     } else if (gap > 0) {
-      el.innerHTML = "The naive model rates this candidate <strong>" + gap.toFixed(1) +
-        " points higher</strong>. That gap is what its proxy features are buying — and it " +
-        "is invisible in production, because true qualification is never observed.";
+      el.innerHTML = "The naïve model rates this candidate <strong>" + gap.toFixed(1) +
+        " points higher</strong>. That gap is what the biased features are buying, and in " +
+        "production you would never see it, because merit is never actually observed.";
     } else {
-      el.innerHTML = "The naive model rates this candidate <strong>" + Math.abs(gap).toFixed(1) +
-        " points lower</strong>. Lacking the proxy signals it rewards, it discounts a " +
-        "candidate the governed model ranks on merit alone.";
+      el.innerHTML = "The naïve model rates this candidate <strong>" + Math.abs(gap).toFixed(1) +
+        " points lower</strong>. Without the biased signals it likes, it marks down someone " +
+        "the governed model ranks on merit alone.";
     }
   }
 

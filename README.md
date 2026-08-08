@@ -6,45 +6,47 @@
 &nbsp;·&nbsp; [Notebook](https://nickwarshak.github.io/resume-screening-governance/notebook.html)
 &nbsp;·&nbsp; [Model card](https://nickwarshak.github.io/resume-screening-governance/model-card.html)
 
-A predictive classification system for ranking software-engineering applicants, built as a
-demonstration of responsible AI development, deployment, and governance.
+A ranking system for software engineering applicants, built to show how you would actually
+develop, evaluate, and govern an AI tool in hiring.
 
-**The central finding:** the model that best predicts historical recruiter decisions is *not*
-the model that best identifies qualified candidates. Optimizing the only metric available in
-production (AUC 0.911) selects the discriminatory model; the governed model scores lower there
-(0.865) and higher against true qualification (0.961 vs 0.915).
+**What I found:** the model that best predicts what recruiters did is not the model that best
+finds qualified people. The naïve model wins on the only number you can see in production (AUC
+0.911 against recruiter decisions). The governed model loses there (0.865) and wins on the thing
+that matters (0.961 vs 0.915 against merit). Picking the model with the best visible number gets
+you the discriminatory one, while doing everything else right.
 
-## Deliverables
+## What is in here
 
 | File | What it is |
 |---|---|
-| `reports/governance_report.pdf` | 7-page governance report (primary deliverable) |
-| `notebooks/resume_screening_governance.ipynb` | Executed end-to-end notebook with outputs |
-| `reports/MODEL_CARD.md` | Model card with intended use, limitations, known disparities |
-| `src/` | All source modules |
-| `figures/` | Generated figures (SHAP, fairness, monitoring, energy) |
+| `reports/IS7085_Governance_Report.pdf` | The governance report (main deliverable) |
+| `reports/report.html` | Same report, built for reading in a browser |
+| `docs/demo.html` | Interactive scorer — both models, live, runs in your browser |
+| `notebooks/resume_screening_governance.ipynb` | The whole pipeline end to end |
+| `reports/MODEL_CARD.md` | Model card: intended use, limits, what is still broken |
+| `src/` | All the source modules |
+| `figures/` | Generated charts |
 | `reports/*.json`, `*.csv` | Raw computed metrics |
-| `docs/demo.html` | Interactive scorer — both models, live, client-side |
-| `tests/verify_report.py` | Automated gate: 64 checks that report claims match pipeline output |
-| `tests/verify_web_demo.py` | Gate: the shipped browser JS matches `predict_proba` to 1e-13 |
-| `tests/verify_demo_render.py` | Gate: the demo page renders and populates in headless Chrome |
+| `tests/verify_report.py` | Checks that the report's numbers match what the code computed |
+| `tests/verify_web_demo.py` | Checks the demo's browser math against scikit-learn |
+| `tests/verify_demo_render.py` | Checks the demo page actually renders |
 
 ## Source modules
 
-| Module | Purpose |
+| Module | What it does |
 |---|---|
-| `generate_data.py` | Synthetic applicant population with four injected bias channels |
-| `train.py` | Trains naive vs governed models; dual evaluation |
-| `fairness.py` | LL144-style disparate impact audit, equalized odds, calibration |
-| `significance.py` | Bootstrap confidence intervals on impact ratios |
-| `explain.py` | SHAP global and local explainability |
-| `guardrails.py` | Six guardrail layers + red-team suite |
-| `monitor.py` | PSI/KS drift, fairness SLO, incident routing, feedback controls |
-| `sustainability.py` | Whole-pipeline energy and carbon accounting |
-| `figures.py` | Report figures |
-| `export_web_model.py` | Exports model params to `docs/model.json` for the browser demo |
+| `generate_data.py` | Builds the synthetic applicant pool with four kinds of bias put in on purpose |
+| `train.py` | Trains the naïve and governed models, scores both against recruiter decisions and against merit |
+| `fairness.py` | Impact ratios by sex, ethnicity, and their intersection |
+| `significance.py` | Bootstrap confidence intervals, so a small group is not read as a certain finding |
+| `explain.py` | SHAP, global and local |
+| `guardrails.py` | The six guardrail layers and the red-team suite |
+| `monitor.py` | Drift detection and the fairness SLO |
+| `sustainability.py` | Energy and carbon accounting for the pipeline |
+| `figures.py` | The report charts |
+| `export_web_model.py` | Exports the model to `docs/model.json` for the browser demo |
 
-## Reproducing
+## Running it
 
 ```bash
 pip install scikit-learn pandas numpy matplotlib shap scipy joblib
@@ -52,55 +54,52 @@ cd src
 python3 generate_data.py && python3 train.py && python3 fairness.py \
   && python3 significance.py && python3 explain.py && python3 monitor.py \
   && python3 sustainability.py && python3 figures.py
-python3 export_web_model.py                 # refresh the browser demo's parameters
-cd ../tests && python3 verify_report.py     # 64/64 checks
-python3 verify_web_demo.py                  # browser JS == scikit-learn
+python3 export_web_model.py                 # refresh the demo's parameters
+cd ../tests && python3 verify_report.py     # report claims vs computed output
+python3 verify_web_demo.py                  # browser JS vs scikit-learn
 python3 verify_demo_render.py               # demo page renders correctly
 ```
 
-Seeded at 42; verified to reproduce identical metrics across a clean rebuild.
+Seeded at 42. A clean rebuild gives the same numbers.
+
+## Results
+
+| Metric | Naïve model | Governed model |
+|---|---|---|
+| AUC vs recruiter decisions | 0.911 | 0.865 |
+| AUC vs merit | 0.915 | **0.961** |
+| Worst impact ratio (sex) | 0.612 | **0.967** |
+| Worst impact ratio (ethnicity) | 0.633 | **0.833** |
+| Worst intersection | 0.488 | 0.652 (still failing) |
+| Attribution through biased features | 37.7% | 0.0% |
+| Red-team cases passed | — | 7 of 7 |
+| Annual pipeline energy | — | 0.19 kWh |
 
 ## The interactive demo
 
-[`docs/demo.html`](docs/demo.html) scores applicants against both models in the browser, with no
-server. The production candidate is a logistic regression — a standardizer, a weight vector and
-an isotonic calibration curve — so it ports to JavaScript exactly rather than approximately.
-`export_web_model.py` writes those parameters to `docs/model.json` and refuses to emit a file
-unless dependency-free arithmetic reproduces `CalibratedClassifierCV.predict_proba` on all 2,400
-test applicants (currently exact, `0.00e+00`).
+[`docs/demo.html`](docs/demo.html) scores applicants against both models right in the browser,
+with no server behind it. The governed model is a logistic regression, which is a standardizer, a
+list of weights, and a calibration curve. That is arithmetic a browser can do, so this is the
+real model and not a re-creation of it.
 
-`tests/verify_web_demo.py` closes the loop from the other side: it cuts the scoring functions out
-of the shipped `demo.html` by brace matching and runs *those exact characters* under Node against
-scikit-learn. Agreement is 1e-13 — float64 rounding. The same closed form yields exact Shapley
-values, since for a linear model `phi_j = coef_j * (z_j - E[z_j])`; no sampling, no `shap`
-dependency.
+`export_web_model.py` writes those numbers to `docs/model.json`, and it refuses to write the file
+at all unless plain arithmetic reproduces scikit-learn's output on all 2,400 test applicants. It
+currently matches exactly. `tests/verify_web_demo.py` checks it from the other end: it pulls the
+scoring functions straight out of the shipped `demo.html` and runs those exact characters under
+Node against scikit-learn. They agree to 1e-13, which is just floating point rounding.
 
-The demo's point is the proxy-leverage panel. For the borderline applicant it opens on, an
-internal referral moves the naive model by **+44.8 percentage points** and the governed model by
-**0.0** — not because the governed model weights it near zero, but because the feature is absent
-from its input space entirely.
+The part worth playing with is the proxy panel. Take the borderline applicant the demo opens on
+and turn the referral on. The naïve model jumps 44.8 points. The governed model does not move at
+all, because that feature is not in it.
 
-## Key results
+## What I did not fix
 
-| Metric | Naive model | Governed model |
-|---|---|---|
-| AUC vs recruiter decisions | 0.911 | 0.865 |
-| AUC vs true qualification | 0.915 | **0.961** |
-| Worst impact ratio (sex) | 0.612 | **0.967** |
-| Worst impact ratio (race) | 0.633 | **0.833** |
-| Worst intersectional | 0.488 | 0.652 (still failing) |
-| SHAP attribution via proxies | 37.7% | 0.0% |
-| Red-team cases passed | — | 7 / 7 |
-| Annual pipeline energy | — | 0.19 kWh (403–4,019× below LLM) |
-
-## Honest limitations
-
-1. The governed model **still fails** the four-fifths rule intersectionally for
-   Female/Hispanic-Latino applicants (0.652, 87% probability of genuine breach). Disclosed,
-   not resolved.
-2. `years_experience` remains age-correlated (1.47 SD gap). Retained on business-necessity
-   grounds; a live ADEA exposure, monitored quarterly.
-3. Training data is synthetic. Metrics demonstrate the governance method; they do not transfer
-   to a real applicant pool.
-4. The system is suitable for **ranking and routing under human review**, not automated
-   rejection. The architecture contains no `REJECT` code path.
+1. The governed model **still fails** at the intersection. Female / Hispanic applicants come out
+   at 0.652. I tried a few things and none of them were honest fixes, so it is reported rather
+   than hidden.
+2. `years_experience` still moves with age. I kept it because the job needs it, but that is a
+   real exposure and not a solved problem.
+3. The data is synthetic. The numbers show the method works. They do not tell you what would
+   happen on a real applicant pool.
+4. This belongs in front of a recruiter, not in place of one. It ranks and it routes. There is no
+   code path in it that rejects anybody.

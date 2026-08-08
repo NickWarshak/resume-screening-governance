@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Model Card — Resume Screening Shortlist Ranker</title>
-<meta name="description" content="Model card for the governed resume-screening shortlist ranker: intended use, performance, fairness, limitations, regulatory posture.">
+<meta name="description" content="Model card for the governed resume screening ranker: what it is for, how it performs, and what is still broken.">
 <style>
 :root {
   --ink: #16150f; --muted: #52514e; --rule: #d8d7d2; --hair: #e6e4de;
@@ -22,9 +22,6 @@ p { margin: 0 0 9px; }
 a { color: var(--blue); }
 .sub { font-family: "DejaVu Sans", Helvetica, sans-serif; color: var(--muted);
         font-size: 10.6pt; margin: 0 0 14px; }
-.status { font-family: "DejaVu Sans", Helvetica, sans-serif; font-size: 9.4pt;
-           color: var(--muted); border-top: 1px solid var(--rule);
-           border-bottom: 1px solid var(--rule); padding: 6px 0; margin-bottom: 20px; }
 table { width: 100%; border-collapse: collapse; display: block; overflow-x: auto;
          font-family: "DejaVu Sans", Helvetica, sans-serif; font-size: 9.6pt;
          margin: 10px 0 14px; }
@@ -51,9 +48,9 @@ strong { font-weight: 700; }
 <a class="backlink" href="./">&larr; Project home</a>
 
 <h1>Model Card — Resume Screening Shortlist Ranker</h1>
-<p class="sub">Governed shortlist ranker for software-engineering applicants</p>
+<p class="sub">The governed shortlist ranker for software engineering applicants</p>
 
-<p><strong>Version:</strong> 1.0 · <strong>Date:</strong> 2026-08-08 · <strong>Owner:</strong> Nick Warshak
+<p><strong>Version:</strong> 1.0 · <strong>Date:</strong> August 2026 · <strong>Owner:</strong> Nick Warshak
 <strong>Status:</strong> Reference implementation. <strong>Not approved for production use.</strong></p>
 <h2>Model details</h2>
 <table>
@@ -66,7 +63,7 @@ strong { font-weight: 700; }
 <tbody>
 <tr>
   <td>Model type</td>
-  <td>Logistic regression (L2), standardized inputs, isotonic calibration</td>
+  <td>Logistic regression, standardized inputs, isotonic calibration</td>
 </tr>
 <tr>
   <td>Production candidate</td>
@@ -74,7 +71,7 @@ strong { font-weight: 700; }
 </tr>
 <tr>
   <td>Input features</td>
-  <td>12 merit-derived resume attributes</td>
+  <td>12 merit-based resume attributes</td>
 </tr>
 <tr>
   <td>Excluded features</td>
@@ -82,7 +79,7 @@ strong { font-weight: 700; }
 </tr>
 <tr>
   <td>Output</td>
-  <td>Calibrated probability + routing action (never a rejection)</td>
+  <td>Calibrated score plus a routing action, never a rejection</td>
 </tr>
 <tr>
   <td>Model size</td>
@@ -94,16 +91,16 @@ strong { font-weight: 700; }
 </tr>
 <tr>
   <td>Inference</td>
-  <td>≈0.7 ms per 1,000 applicants (mean of 20 runs)</td>
+  <td>about 0.6 ms per 1,000 applicants</td>
 </tr>
 </tbody>
 </table>
 <h2>Intended use</h2>
-<p><strong>In scope.</strong> Producing a <em>ranked</em> shortlist of software engineering applicants for human
-recruiter review; routing uncertain applicants to unaided human screening.</p>
-<p><strong>Out of scope, explicitly.</strong> Automated rejection of any applicant. Ranking for job families
-other than software engineering. Any use where the model output is the final decision.
-Use as evidence of an applicant's ability.</p>
+<p><strong>What it is for.</strong> Ranking software engineering applicants so a recruiter sees the best fits
+first, and routing the ones the model is unsure about to a person who reads them without a score.</p>
+<p><strong>What it is not for.</strong> Rejecting anybody. Ranking for jobs other than software engineering. Any
+situation where the model output is the final decision. Being treated as evidence of how good an
+applicant actually is.</p>
 <h2>Performance</h2>
 <table>
 <thead>
@@ -114,15 +111,15 @@ Use as evidence of an applicant's ability.</p>
 </thead>
 <tbody>
 <tr>
-  <td>AUC vs historical recruiter decisions</td>
+  <td>AUC vs recruiter decisions</td>
   <td>0.865</td>
 </tr>
 <tr>
-  <td>AUC vs true latent qualification</td>
+  <td>AUC vs merit</td>
   <td>0.961</td>
 </tr>
 <tr>
-  <td>Average precision</td>
+  <td>Precision</td>
   <td>0.680</td>
 </tr>
 <tr>
@@ -139,28 +136,29 @@ Use as evidence of an applicant's ability.</p>
 </tr>
 </tbody>
 </table>
-<p>The naive comparison model scores <strong>higher</strong> on the first metric (0.911) and <strong>lower</strong> on the
-second (0.915). Selection on production-observable metrics alone favors the worse model.</p>
+<p>The naïve model scores higher on the first line (0.911) and lower on the second (0.915). Only
+the first line is observable in production, so picking the model with the best visible number
+gets you the worse one.</p>
 <h2>Fairness</h2>
-<p>Worst-case impact ratios (four-fifths threshold = 0.80):</p>
+<p>Worst impact ratios, where 0.80 is the threshold:</p>
 <table>
 <thead>
 <tr>
   <th>System</th>
   <th>Sex</th>
-  <th>Race</th>
-  <th>Intersectional</th>
+  <th>Ethnicity</th>
+  <th>Intersection</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td>Human recruiters (status quo)</td>
+  <td>Human recruiter</td>
   <td>0.607</td>
   <td>0.583</td>
   <td>—</td>
 </tr>
 <tr>
-  <td>Naive model</td>
+  <td>Naïve model</td>
   <td>0.612</td>
   <td>0.633</td>
   <td>0.488</td>
@@ -173,34 +171,33 @@ second (0.915). Selection on production-observable metrics alone favors the wors
 </tr>
 </tbody>
 </table>
-<p><strong>Known unresolved disparity.</strong> Female / Hispanic-Latino applicants show an impact ratio of
-0.652 (95% CI 0.370–0.949; 87% bootstrap probability of genuine breach). The model passes
-marginal audits while failing this intersection. This is disclosed, not resolved.</p>
+<p><strong>What is still broken.</strong> Female / Hispanic applicants come out at 0.652. The model passes on sex
+and on ethnicity when you look at them one at a time, then fails when you look at both together.
+I tried a few things to fix it and none of them were honest fixes, so I am reporting it rather
+than hiding it.</p>
 <h2>Limitations</h2>
 <ol>
-<li><strong>The label is a proxy.</strong> Trained on recruiter decisions, not job performance. The model
-can only be as fair as what it imitates, minus what governance removes.</li>
-<li><strong>Age-correlated features retained.</strong> <code>years_experience</code> shows a 1.47 SD gap across age
-groups. Retained on business-necessity grounds; monitored quarterly. This is a live ADEA
-exposure, not a solved problem.</li>
-<li><strong>Synthetic training data.</strong> Distributions are constructed, not observed. Metrics
-demonstrate the governance method; they do not transfer to a real applicant pool.</li>
-<li><strong>Intersectional audit underpowered.</strong> Several cells fall below n=100. Wide intervals
-indicate the audit cannot see clearly, not that the system is safe.</li>
+<li><strong>The label is the wrong thing.</strong> The model is trained on whether a recruiter advanced
+someone, not on whether they were good at the job. It can only be as fair as the thing it is
+copying, minus whatever governance takes back out.</li>
+<li><strong>Experience still tracks age.</strong> <code>years_experience</code> is kept because the job genuinely needs
+it, but it moves with age group. That is a real exposure, not a solved problem.</li>
+<li><strong>The data is synthetic.</strong> The numbers show that the method works. They do not tell you what
+would happen on a real applicant pool.</li>
+<li><strong>The intersection audit is small.</strong> Several of those groups are under 100 people. Wide
+intervals mean the audit cannot see clearly, not that the system is fine.</li>
 </ol>
 <h2>Ethical considerations</h2>
-<p>The most likely harm is not a wrong score. It is a wrong score acted on automatically, at
-scale, with no human in the loop and no applicant recourse. Every architectural choice —
-abstention band, no-reject constraint, batch circuit breaker, randomized human holdout — is
-aimed at that failure mode rather than at maximizing accuracy.</p>
+<p>The thing most likely to go wrong here is not a bad score. It is a bad score that gets acted on
+automatically, at volume, with nobody reading it and no way for the applicant to respond. The
+abstention band, the no-reject rule, the batch circuit breaker and the human holdout are all
+aimed at that, rather than at squeezing out more accuracy.</p>
 <h2>Regulatory posture</h2>
-<p>Subject to NYC Local Law 144 (annual independent bias audit, published results, 10-business-day
-candidate notice), EEOC Uniform Guidelines (29 CFR 1607), Title VII, ADEA, ADA, Illinois AIVIA,
-Colorado SB 24-205, and EU AI Act Annex III §4 obligations where applicable.</p>
+<p>Built against NYC Local Law 144, the EEOC Uniform Guidelines, Title VII, Illinois AIVIA, and
+Colorado SB 24-205.</p>
 
 
-<div class="foot">Source: <code>reports/MODEL_CARD.md</code>. Every figure in this project is
-regenerated from <code>src/</code>, seeded at 42, and gated by
-<code>tests/verify_report.py</code> (64 checks).</div>
+<div class="foot">Source: <code>reports/MODEL_CARD.md</code>. Every number here is generated by
+<code>src/</code>, seeded at 42, and checked by <code>tests/verify_report.py</code>.</div>
 
 </body></html>

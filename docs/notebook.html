@@ -7798,47 +7798,49 @@ a.anchor-link {
 <div id="nb-backlink" style="font-family:'DejaVu Sans',Helvetica,Arial,sans-serif;
  font-size:13px;padding:10px 18px;border-bottom:1px solid #d8d7d2;background:#f6f5f1;">
 <a href="./" style="color:#2a78d6;text-decoration:none;">&larr; Project home</a>
-<span style="color:#52514e;"> &nbsp;&middot;&nbsp; Executed notebook &mdash; Responsible AI Resume Screening</span>
+<span style="color:#52514e;"> &nbsp;&middot;&nbsp; Notebook &mdash; Responsible AI Resume Screening</span>
 </div>
 
 <main>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=61dbe7ce">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=6724cfa4">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="Responsible-AI-Resume-Screening-%E2%80%94-End-to-End-Notebook">Responsible AI Resume Screening — End-to-End Notebook<a class="anchor-link" href="#Responsible-AI-Resume-Screening-%E2%80%94-End-to-End-Notebook">¶</a></h1><p><strong>Author:</strong> Nick Warshak<br/>
-<strong>System:</strong> Applicant shortlist ranking for software engineering requisitions<br/>
-<strong>Classification:</strong> High-risk AI system (EU AI Act Annex III §4; NYC Local Law 144 AEDT)</p>
+<h1 id="Responsible-AI-Resume-Screening">Responsible AI Resume Screening<a class="anchor-link" href="#Responsible-AI-Resume-Screening">¶</a></h1><p><strong>Author:</strong> Nick Warshak
+<strong>System:</strong> Ranking applicants for software engineering roles
+<strong>Status:</strong> Reference implementation, not approved for production</p>
 <hr/>
-<h2 id="The-argument-this-notebook-makes">The argument this notebook makes<a class="anchor-link" href="#The-argument-this-notebook-makes">¶</a></h2><p>Resume screening is the domain where AI hiring tools have most publicly failed. Amazon
-scrapped an internal recruiting model in 2018 after finding it penalized resumes containing
-the word "women's." The failure was not a bug. The model worked exactly as designed: it
-learned to reproduce ten years of human hiring decisions, and those decisions were biased.</p>
-<p>This notebook rebuilds that failure deliberately, measures it, and then fixes it — so that
-each governance control can be evaluated against evidence rather than asserted.</p>
-<p><strong>The central finding, stated up front:</strong> the model that best predicts historical recruiter
-behavior is <em>not</em> the model that best identifies qualified candidates. Optimizing the metric
-available in production selects the discriminatory model.</p>
+<h2 id="What-this-notebook-is-arguing">What this notebook is arguing<a class="anchor-link" href="#What-this-notebook-is-arguing">¶</a></h2><p>Resume screening is a domain in which AI has very publicly come up short. Amazon cut an internal
+recruitment model in 2018 when it found that the model deducted from an application with the word
+"women's." That was not a bug. The model was trained on human decisions and had baked in human
+bias, which is exactly what it was asked to do.</p>
+<p>This notebook rebuilds that failure on purpose, measures it, and then constrains it, so that the
+governance can be checked against real evidence instead of just asserted.</p>
+<p><strong>What I found, up front:</strong> the model that best predicts what recruiters did is not the model that
+best finds qualified people. Picking the model with the best number you can actually see in
+production gets you the discriminatory one.</p>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=c1c0e8f8">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=7eb92299">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="1.-Setup-and-data-generation">1. Setup and data generation<a class="anchor-link" href="#1.-Setup-and-data-generation">¶</a></h2><p>Real resume corpora contain PII and cannot lawfully be repurposed for model training. We
-generate a synthetic population in which <em>true qualification is known by construction</em> —
-which is what makes the fairness audit verifiable. In real data, true qualification is never
-observed, so you can never prove the model is wrong; here we can.</p>
+<h2 id="1.-Setup-and-building-the-data">1. Setup and building the data<a class="anchor-link" href="#1.-Setup-and-building-the-data">¶</a></h2><p>Real resumes contain information that can't, and shouldn't, be used for model training without
+consent. So I generate a synthetic pool instead, where <strong>qualification is known</strong> and generated
+separately from protected class.</p>
+<p>That last part is what makes the fairness audit mean anything. On real data you never observe
+whether someone would actually have been good at the job, only whether they got hired, so you can
+never prove the model is wrong. Here I can.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=5618c11d">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=4899b396">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7846,7 +7848,7 @@ observed, so you can never prove the model is wrong; here we can.</p>
 <div class="jp-InputPrompt jp-InputArea-prompt">In [1]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span><span class="o">,</span><span class="w"> </span><span class="nn">os</span>
+<div class="highlight hl-python"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span><span class="o">,</span><span class="w"> </span><span class="nn">os</span>
 <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="s2">"../src"</span><span class="p">))</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span><span class="o">,</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 <span class="n">pd</span><span class="o">.</span><span class="n">set_option</span><span class="p">(</span><span class="s2">"display.width"</span><span class="p">,</span> <span class="mi">160</span><span class="p">)</span>
@@ -8046,54 +8048,48 @@ observed, so you can never prove the model is wrong; here we can.</p>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=8b37d573">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=ac1e78fd">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h3 id="The-four-bias-channels">The four bias channels<a class="anchor-link" href="#The-four-bias-channels">¶</a></h3><p>The label is <strong>not</strong> "was this person good at the job." It is "did a recruiter advance them."
-That gap — a proxy label standing in for the construct of interest — is the single most
-important governance flaw in commercial resume screeners. Four documented mechanisms are
-injected:</p>
+<h3 id="The-four-kinds-of-bias-I-put-in">The four kinds of bias I put in<a class="anchor-link" href="#The-four-kinds-of-bias-I-put-in">¶</a></h3><p>The training label has never been "was this person good at the job." It is "did this person get
+advanced by the recruiter." That gap is the single biggest problem with resume screeners, and it
+brings in biases that are neither legal nor productive for recruiting. I built in four of them:</p>
 <table>
 <thead>
 <tr>
 <th>Channel</th>
-<th>Mechanism</th>
-<th>Real-world basis</th>
+<th>What it is</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Referral homophily</td>
-<td>Referrals flow through existing employee networks</td>
-<td>Rubineau &amp; Fernandez (2013)</td>
+<td>Referrals</td>
+<td>Internal references, which flow through the people already working there</td>
 </tr>
 <tr>
-<td>Employment-gap penalty</td>
-<td>Gaps penalized; caregiving unequally distributed</td>
-<td>BLS time-use data</td>
+<td>Gaps</td>
+<td>Time not employed, which penalizes anyone who had to step away for personal reasons</td>
 </tr>
 <tr>
-<td>Prestige proxy</td>
-<td>"Top school" tracks parental income, which is racialized</td>
-<td>Chetty et al. (2020)</td>
+<td>Prestige</td>
+<td>Which school someone attended, which carries obvious class and income factors</td>
 </tr>
 <tr>
-<td>Residual direct bias</td>
-<td>Name-based callback discrimination</td>
-<td>Bertrand &amp; Mullainathan (2004)</td>
+<td>Distance</td>
+<td>How far the candidate lives from the office</td>
 </tr>
 </tbody>
 </table>
-<p>Critically, <strong>latent qualification is generated independent of protected class.</strong> In this
-world there is no real ability difference between groups, so every disparity the audit finds
-is pure measurement bias.</p>
+<p>The important part is that <strong>qualification is generated separately from protected class.</strong> There
+is no real ability difference between groups in this world, so anything the audit finds is bias I
+put there on purpose and can measure.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=40405e0e">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=0492dbb9">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8101,7 +8097,7 @@ is pure measurement bias.</p>
 <div class="jp-InputPrompt jp-InputArea-prompt">In [2]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">"Advance rate by sex:"</span><span class="p">)</span>
+<div class="highlight hl-python"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">"Advance rate by sex:"</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">"sex"</span><span class="p">)</span><span class="o">.</span><span class="n">advanced_to_onsite</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">4</span><span class="p">))</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">Advance rate by race/ethnicity:"</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">"race_ethnicity"</span><span class="p">)</span><span class="o">.</span><span class="n">advanced_to_onsite</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">4</span><span class="p">))</span>
@@ -8148,19 +8144,20 @@ Name: latent_qualification, dtype: float64
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=f3195ff7">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=05078027">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="2.-Training:-two-models,-two-philosophies">2. Training: two models, two philosophies<a class="anchor-link" href="#2.-Training:-two-models,-two-philosophies">¶</a></h2><p><strong>Naive</strong> — every available feature, including known demographic proxies. The
-"maximize AUC and ship it" model.</p>
-<p><strong>Governed</strong> — proxy features removed, calibrated, abstention band applied.</p>
+<h2 id="2.-Training-two-models">2. Training two models<a class="anchor-link" href="#2.-Training-two-models">¶</a></h2><p>I trained two models so they could be compared directly.</p>
+<p><strong>Naïve</strong> uses all sixteen features, including the four biased ones. This is the model you get if
+you just maximize the score and ship it.</p>
+<p><strong>Governed</strong> uses only the twelve merit-based features, calibrated, with an abstention band.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=089e382d">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=54d15897">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8168,7 +8165,7 @@ Name: latent_qualification, dtype: float64
 <div class="jp-InputPrompt jp-InputArea-prompt">In [3]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">train</span><span class="w"> </span><span class="kn">import</span> <span class="n">run</span> <span class="k">as</span> <span class="n">train_run</span>
+<div class="highlight hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">train</span><span class="w"> </span><span class="kn">import</span> <span class="n">run</span> <span class="k">as</span> <span class="n">train_run</span>
 <span class="n">metrics</span> <span class="o">=</span> <span class="n">train_run</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -8206,36 +8203,36 @@ Operating point @ 25% shortlist rate:
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=b946846c">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=347e14a4">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h3 id="Reading-the-result">Reading the result<a class="anchor-link" href="#Reading-the-result">¶</a></h3><p>Compare the two AUC columns. The naive model wins on <code>AUC(hist)</code> — predicting what
-recruiters did. The governed model wins on <code>AUC(true qual)</code> — identifying who was actually
+<h3 id="Reading-that-table">Reading that table<a class="anchor-link" href="#Reading-that-table">¶</a></h3><p>Compare the two AUC columns. The naïve model wins on <code>AUC(hist)</code>, which is predicting what
+recruiters did. The governed model wins on <code>AUC(true qual)</code>, which is finding who was actually
 qualified.</p>
-<p>In production <strong>you only ever observe the first column.</strong> Standard model selection therefore
-picks the naive model, and picks the worse one. This is the mechanism by which a
-well-intentioned team ships a discriminatory system while following every ML best practice.</p>
+<p>In production <strong>you only ever see the first column.</strong> So standard practice picks the naïve model,
+and picks the worse one. This is how a team following every best practice still ends up shipping
+a discriminatory system.</p>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=881e85df">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=5e074b76">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="3.-Fairness-audit">3. Fairness audit<a class="anchor-link" href="#3.-Fairness-audit">¶</a></h2><p>Implements what NYC Local Law 144 requires of automated employment decision tools:
-selection rates and impact ratios by sex, race/ethnicity, and their intersection.</p>
+<h2 id="3.-Fairness-audit">3. Fairness audit<a class="anchor-link" href="#3.-Fairness-audit">¶</a></h2><p>This measures fairness the way the law does, specifically NYC: selection rates and impact ratios
+by sex, race/ethnicity, and their intersection.</p>
 <p>An impact ratio below 0.80 is prima facie evidence of adverse impact under the EEOC Uniform
-Guidelines (29 CFR 1607.4D).</p>
+Guidelines.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=6e5e7768">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=2d417a7a">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8243,7 +8240,7 @@ Guidelines (29 CFR 1607.4D).</p>
 <div class="jp-InputPrompt jp-InputArea-prompt">In [4]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">fairness</span><span class="w"> </span><span class="kn">import</span> <span class="n">run</span> <span class="k">as</span> <span class="n">fairness_run</span>
+<div class="highlight hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">fairness</span><span class="w"> </span><span class="kn">import</span> <span class="n">run</span> <span class="k">as</span> <span class="n">fairness_run</span>
 <span class="n">audit</span> <span class="o">=</span> <span class="n">fairness_run</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -8370,18 +8367,19 @@ Values below 0.80 constitute prima facie adverse impact.
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=75a779fa">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=f3de148f">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h3 id="Statistical-honesty">Statistical honesty<a class="anchor-link" href="#Statistical-honesty">¶</a></h3><p>An impact ratio computed on 68 applicants is not the same evidence as one computed on 1,113.
-Reporting a bare point estimate as a compliance finding overstates what the audit knows.</p>
+<h3 id="Being-honest-about-small-groups">Being honest about small groups<a class="anchor-link" href="#Being-honest-about-small-groups">¶</a></h3><p>An impact ratio worked out on 68 applicants is not the same evidence as one worked out on 1,113.
+Reporting a bare number as a compliance finding claims more than the audit actually knows, so I
+bootstrap intervals around them.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=1c3bb939">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=673ed5f4">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8389,7 +8387,7 @@ Reporting a bare point estimate as a compliance finding overstates what the audi
 <div class="jp-InputPrompt jp-InputArea-prompt">In [5]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">significance</span><span class="w"> </span><span class="kn">import</span> <span class="n">run</span> <span class="k">as</span> <span class="n">sig_run</span>
+<div class="highlight hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">significance</span><span class="w"> </span><span class="kn">import</span> <span class="n">run</span> <span class="k">as</span> <span class="n">sig_run</span>
 <span class="n">sig_run</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -8486,46 +8484,45 @@ Female / Two or more/Other     32
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=476d55c1">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=4ff3f168">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p><strong>Two findings that only appear with intervals:</strong></p>
+<p><strong>Two things only show up once you have intervals:</strong></p>
 <ol>
-<li>Female / Hispanic-Latino shows an 87% bootstrap probability of a genuine four-fifths breach
-— a real finding, not noise, despite n=68.</li>
-<li>Hispanic/Latino overall has a <em>passing</em> point estimate of 0.811 but a 46% probability the
-true ratio breaches. Reporting the point estimate alone would be misleading.</li>
+<li>Female / Hispanic has an 87% chance of a genuine breach. That is a real finding and not noise,
+even at n=68.</li>
+<li>Hispanic/Latino overall has a <em>passing</em> point estimate of 0.811, but a 46% chance the true
+ratio actually breaches. Reporting just the point estimate would have been misleading.</li>
 </ol>
-<p>The governed model passes marginal audits for sex and race while still failing
-intersectionally. This is precisely why LL144 mandates intersectional reporting.</p>
+<p>The governed model passes on sex and on ethnicity separately while still failing at the
+intersection. That is exactly why the law asks for intersectional reporting.</p>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=0dd72632">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=41c0e074">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="4.-Explainability">4. Explainability<a class="anchor-link" href="#4.-Explainability">¶</a></h2><p>Two distinct jobs, often conflated:</p>
+<h2 id="4.-Explainability">4. Explainability<a class="anchor-link" href="#4.-Explainability">¶</a></h2><p>Two different jobs that get confused with each other:</p>
 <ul>
-<li><strong>Global</strong> — what does the model rely on? A bias-detection tool.</li>
-<li><strong>Local</strong> — why was <em>this</em> applicant scored this way? A legal artifact, feeding
-adverse-action-style notices required under Illinois AIVIA and the EU AI Act.</li>
+<li><strong>Global</strong> is how the model makes decisions as a whole. This is what catches bias.</li>
+<li><strong>Local</strong> is why one specific decision came out the way it did. This is the artifact you would
+have to show a candidate who asked.</li>
 </ul>
-<p><strong>Caveat that belongs in the code, not just the report:</strong> SHAP explains the <em>model</em>, not the
-<em>world</em>. A +0.30 attribution for "referral" means the model raised its score because the
-applicant was referred. It does not mean referrals cause job success. Treating SHAP
-attributions as causal is how an organization talks itself into believing a biased feature is
-a legitimate one.</p>
+<p>One caveat that belongs in the code and not just the report: SHAP explains the <strong>model</strong>, not the
+<strong>world</strong>. A +0.30 for "referral" means the model raised its score because the applicant was
+referred. It does not mean referrals cause job success. Treating these as causal is how a team
+talks itself into believing a biased feature is a legitimate one.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=590202c4">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=8bd79329">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8533,7 +8530,7 @@ a legitimate one.</p>
 <div class="jp-InputPrompt jp-InputArea-prompt">In [6]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">explain</span><span class="w"> </span><span class="kn">import</span> <span class="n">run</span> <span class="k">as</span> <span class="n">explain_run</span>
+<div class="highlight hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">explain</span><span class="w"> </span><span class="kn">import</span> <span class="n">run</span> <span class="k">as</span> <span class="n">explain_run</span>
 <span class="n">shap_summary</span> <span class="o">=</span> <span class="n">explain_run</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -8623,21 +8620,21 @@ judgment about the applicant's ability.
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=237241e0">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=afec7bb7">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="5.-Guardrails-and-red-teaming">5. Guardrails and red teaming<a class="anchor-link" href="#5.-Guardrails-and-red-teaming">¶</a></h2><p>Six layers. The load-bearing design decision: <strong>the model cannot reject anyone.</strong> It
-produces a ranked shortlist and a routing recommendation; rejection remains a human act.
-There is deliberately no code path returning <code>REJECT</code>.</p>
-<p>Prompt injection is a live threat, not hypothetical: any pipeline passing resume text to an
-LLM is one where <em>the applicant controls part of the prompt</em>.</p>
+<h2 id="5.-Guardrails-and-red-teaming">5. Guardrails and red teaming<a class="anchor-link" href="#5.-Guardrails-and-red-teaming">¶</a></h2><p>Six layers. The most important design choice was <strong>not letting the model reject anybody.</strong> It
+outputs a shortlist and a recommendation, and there is deliberately no code path that returns a
+rejection. That keeps it a ranking tool rather than an automated decision maker.</p>
+<p>Prompt injection is a real threat here, not a hypothetical one. Applicants will try tricks to get
+scored highly, which defeats the point of having the tool at all.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=d6eadf71">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=e5a4591a">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8645,7 +8642,7 @@ LLM is one where <em>the applicant controls part of the prompt</em>.</p>
 <div class="jp-InputPrompt jp-InputArea-prompt">In [7]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">guardrails</span><span class="w"> </span><span class="kn">import</span> <span class="n">run</span> <span class="k">as</span> <span class="n">guard_run</span>
+<div class="highlight hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">guardrails</span><span class="w"> </span><span class="kn">import</span> <span class="n">run</span> <span class="k">as</span> <span class="n">guard_run</span>
 <span class="n">guard</span> <span class="o">=</span> <span class="n">guard_run</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -8723,35 +8720,35 @@ Of the flagged pairs, those in the GOVERNED feature set: ['avg_tenure_months', '
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=377f706b">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=d54bc7aa">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h3 id="A-red-team-finding-that-changed-the-design">A red-team finding that changed the design<a class="anchor-link" href="#A-red-team-finding-that-changed-the-design">¶</a></h3><p>Case <strong>RT-07</strong> originally failed. An early revision matched the bare phrase
-<code>prompt injection</code>, which flagged legitimate ML-security engineers who simply described their
-own work — a guardrail that discriminated against applicants in the AI safety field.</p>
-<p>The fix: detection keys on <em>instructional framing directed at the system</em>, never on subject
-matter. RT-07 is retained as a standing regression test. This is what red teaming is for —
-the defect was in the defense, not the model.</p>
+<h3 id="A-red-team-finding-that-changed-the-design">A red-team finding that changed the design<a class="anchor-link" href="#A-red-team-finding-that-changed-the-design">¶</a></h3><p>Case <strong>RT-07</strong> originally failed. An early version matched the bare phrase <code>prompt injection</code>,
+which flagged legitimate ML and AI-safety engineers who were simply describing their own work. The
+guardrail was discriminating against applicants in that field.</p>
+<p>The fix was to detect <em>framing directed at the system</em> rather than subject matter. I kept RT-07 in
+the suite so it can't come back. This is what red teaming is for. The defect was in the defense,
+not the model.</p>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=f782608b">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=32f66e91">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="6.-Monitoring">6. Monitoring<a class="anchor-link" href="#6.-Monitoring">¶</a></h2><p>Three failure modes, each needing its own detector. The one that matters most and is
-monitored least is <strong>fairness drift</strong>: impact ratios degrade while AUC, PSI, and every
-accuracy metric hold steady.</p>
+<h2 id="6.-Monitoring">6. Monitoring<a class="anchor-link" href="#6.-Monitoring">¶</a></h2><p>Resume screening drifts in three ways, and each one needs its own detector. The one that matters
+most and gets watched least is <strong>fairness drift</strong>, where impact ratios fall apart while accuracy
+and every drift metric sit still.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=17b7b192">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=38296cbf">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8759,7 +8756,7 @@ accuracy metric hold steady.</p>
 <div class="jp-InputPrompt jp-InputArea-prompt">In [8]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">monitor</span><span class="w"> </span><span class="kn">import</span> <span class="n">run</span> <span class="k">as</span> <span class="n">monitor_run</span>
+<div class="highlight hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">monitor</span><span class="w"> </span><span class="kn">import</span> <span class="n">run</span> <span class="k">as</span> <span class="n">monitor_run</span>
 <span class="n">history</span> <span class="o">=</span> <span class="n">monitor_run</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -8833,23 +8830,23 @@ Abstention band &gt; 40% of volume             P3    Recalibration; capacity pla
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=b54cea9c">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=945a4205">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>At month 2 the fairness SLO breaches (race impact ratio 0.779) while AUC sits at 0.867 and
-max PSI is 0.065 — <em>below even the warning band</em>. A performance-only dashboard shows all
-green during an active four-fifths breach.</p>
-<p>By month 6 the inverse holds: PSI 0.683 (well past alert) with AUC unmoved at 0.868. Drift
-alarms fire with no performance degradation. Both directions of the decoupling are real, and
-neither is visible from a single dashboard.</p>
+<p>In month 2 the race impact ratio breaches at 0.779 while AUC is 0.867 and max PSI is 0.065,
+which is <em>below even the warning band</em>. A dashboard that only tracks performance shows all green
+during an active breach.</p>
+<p>By month 6 it runs the other way: PSI is 0.683, well past the alert line, while AUC has not moved
+at 0.868. Drift alarms fire with no loss of accuracy at all. Both directions are real and neither
+one is visible from a single dashboard.</p>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=4537f42c">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=763c9054">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8859,7 +8856,7 @@ neither is visible from a single dashboard.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=c9ab5cab">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=5bc2a788">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8867,7 +8864,7 @@ neither is visible from a single dashboard.</p>
 <div class="jp-InputPrompt jp-InputArea-prompt">In [9]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sustainability</span><span class="w"> </span><span class="kn">import</span> <span class="n">run</span> <span class="k">as</span> <span class="n">sustain_run</span>
+<div class="highlight hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sustainability</span><span class="w"> </span><span class="kn">import</span> <span class="n">run</span> <span class="k">as</span> <span class="n">sustain_run</span>
 <span class="n">sustain</span> <span class="o">=</span> <span class="n">sustain_run</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -8940,24 +8937,24 @@ Assumptions: 15.0 W/core, PUE 1.12, grid 369.0 gCO2/kWh (US avg).
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=05fba8e8">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=50aa4f37">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p><strong>A methodological correction worth stating.</strong> An earlier revision counted only the
-model's own arithmetic and produced a defensible-looking claim of an ~8-order-of-magnitude
-advantage over an LLM. That was dishonest accounting. Priced across the whole serving
-envelope — parsing, serialization, logging — the advantage is roughly 3 orders of magnitude.
-Still decisive, and it has the advantage of being true.</p>
-<p>The more useful finding: the model is <strong>0.0004%</strong> of pipeline energy. Optimizing it further
-would be optimizing the wrong thing.</p>
+<p><strong>Something I corrected along the way.</strong> An earlier version of this counted only the model's
+own arithmetic and produced a very impressive looking claim of about eight orders of magnitude
+against an LLM. That was not honest accounting. Once you price the whole thing, including parsing
+and serving, the advantage is roughly three orders of magnitude. Still decisive, and it has the
+advantage of being true.</p>
+<p>The more useful finding is that the model is <strong>0.0004%</strong> of the pipeline's energy. Optimizing it
+further would be optimizing the wrong thing.</p>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=a31ea33f">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=d8ee815c">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8972,26 +8969,26 @@ would be optimizing the wrong thing.</p>
 </thead>
 <tbody>
 <tr>
-<td>Does removing proxies fix disparate impact?</td>
-<td>Largely — worst race impact ratio 0.63 → 0.83</td>
+<td>Does dropping the biased features fix disparate impact?</td>
+<td>Mostly. Worst ethnicity ratio goes 0.63 → 0.83</td>
 </tr>
 <tr>
 <td>Does it fix it completely?</td>
-<td><strong>No.</strong> Female/Hispanic-Latino remains at 0.65</td>
+<td><strong>No.</strong> Female / Hispanic is still at 0.652</td>
 </tr>
 <tr>
 <td>Does fairness cost accuracy?</td>
-<td>Against the biased label yes (−0.046 AUC); against true qualification <strong>no</strong>, it gains +0.046</td>
+<td>Against the biased label yes, −0.046 AUC. Against merit it <em>gains</em> +0.046</td>
 </tr>
 <tr>
-<td>Is the system safe to deploy fully automated?</td>
-<td><strong>No</strong> — and the design forecloses it</td>
+<td>Is this safe to run fully automated?</td>
+<td><strong>No</strong>, and the design does not allow it</td>
 </tr>
 </tbody>
 </table>
-<p>The honest conclusion is that this system is suitable for <strong>ranking and routing under human
-review</strong>, not for automated rejection. A governance report that concluded otherwise would be
-recommending something the evidence in this notebook does not support.</p>
+<p>The honest answer is that this system belongs in front of a recruiter, not in place of one. It
+ranks and it routes, and a person still decides. A report that concluded anything else would be
+recommending something the evidence here does not support.</p>
 </div>
 </div>
 </div>

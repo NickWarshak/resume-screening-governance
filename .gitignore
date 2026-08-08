@@ -1,0 +1,25 @@
+# Generated data and trained artifacts — large, not for public hosting
+data/
+models/
+*.csv
+!reports/*.csv
+*.joblib
+*.pkl
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.ipynb_checkpoints/
+
+# Local environments
+.venv/
+venv/
+env/
+.env
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

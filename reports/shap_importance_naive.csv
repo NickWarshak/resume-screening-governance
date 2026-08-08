@@ -1,0 +1,17 @@
+feature,mean_abs_shap,is_proxy,share_of_total
+keyword_match_score,0.6979167916589346,False,0.1878
+referral,0.5773474095701353,True,0.1554
+num_relevant_skills,0.46141375098681425,False,0.1242
+employment_gap_months,0.36083501882488206,True,0.0971
+education_level,0.3186754662990699,False,0.0858
+top_school,0.3055854603950946,True,0.0822
+portfolio_projects,0.29210340353002495,False,0.0786
+distance_from_office_km,0.15764860543365192,True,0.0424
+leadership_indicators,0.14882222806411713,False,0.04
+years_experience,0.1011570025730541,False,0.0272
+gpa,0.09267295392050562,False,0.0249
+avg_tenure_months,0.0692071961907329,False,0.0186
+num_certifications,0.05842974055058298,False,0.0157
+resume_length_words,0.05300602245725026,False,0.0143
+num_prior_roles,0.01674604260510123,False,0.0045
+num_publications,0.004732638008516442,False,0.0013

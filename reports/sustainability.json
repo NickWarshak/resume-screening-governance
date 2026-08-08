@@ -1,0 +1,58 @@
+{
+  "per_model": {
+    "governed_logistic": {
+      "train_cpu_seconds": 0.02,
+      "train_wall_seconds": 0.016,
+      "model_size_kb": 2.1,
+      "inference_ms_per_1k_resumes": 0.6,
+      "train_energy_wh": 0.0001,
+      "train_gco2": 0.0
+    },
+    "governed_gbm": {
+      "train_cpu_seconds": 0.37,
+      "train_wall_seconds": 0.197,
+      "model_size_kb": 201.9,
+      "inference_ms_per_1k_resumes": 2.71,
+      "train_energy_wh": 0.0017,
+      "train_gco2": 0.0006
+    },
+    "naive_gbm": {
+      "train_cpu_seconds": 0.388,
+      "train_wall_seconds": 0.218,
+      "model_size_kb": 240.9,
+      "inference_ms_per_1k_resumes": 3.4,
+      "train_energy_wh": 0.0018,
+      "train_gco2": 0.0007
+    }
+  },
+  "annual_projection": {
+    "resumes_per_year": 250000,
+    "retrains_per_year": 4,
+    "model_scoring_wh": 0.001,
+    "parsing_wh": 140.0,
+    "serving_overhead_wh": 46.67,
+    "training_wh": 0.0004,
+    "annual_total_wh": 186.67,
+    "annual_total_kwh": 0.1867,
+    "model_share_of_total": 4e-06,
+    "annual_gco2_us_grid": 68.88,
+    "annual_gco2_low_carbon": 5.97,
+    "llm_alternative_annual_kwh_low": 75.19,
+    "llm_alternative_annual_kwh_high": 750.19,
+    "llm_alternative_kgco2_low": 27.74,
+    "llm_alternative_kgco2_high": 276.82,
+    "ratio_low": 402.8,
+    "ratio_high": 4018.8,
+    "assumed_parse_ms": 120.0,
+    "assumed_serving_ms": 40.0
+  },
+  "assumptions": {
+    "cpu_tdp_watts": 15.0,
+    "pue": 1.12,
+    "grid_gco2_per_kwh": 369.0,
+    "llm_wh_per_resume_range": [
+      0.3,
+      3.0
+    ]
+  }
+}

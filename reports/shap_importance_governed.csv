@@ -1,0 +1,13 @@
+feature,mean_abs_shap,is_proxy,share_of_total
+keyword_match_score,0.7890667167191286,False,0.3331
+num_relevant_skills,0.4033681330487267,False,0.1703
+education_level,0.29868907482366663,False,0.1261
+portfolio_projects,0.2980451867998635,False,0.1258
+gpa,0.15040617494165778,False,0.0635
+leadership_indicators,0.11537420012382382,False,0.0487
+years_experience,0.08700185616506168,False,0.0367
+resume_length_words,0.07508182818920477,False,0.0317
+avg_tenure_months,0.07122789968347498,False,0.0301
+num_certifications,0.05194094633348074,False,0.0219
+num_prior_roles,0.021092323447365266,False,0.0089
+num_publications,0.0073553263308293575,False,0.0031

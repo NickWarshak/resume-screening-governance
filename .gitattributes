@@ -1,0 +1,7 @@
+# Normalize text in the repository, let the OS decide in the working tree.
+* text=auto
+
+*.png binary
+*.pdf binary
+*.joblib binary
+*.ipynb -text

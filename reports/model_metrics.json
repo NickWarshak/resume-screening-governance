@@ -1,0 +1,94 @@
+{
+  "naive_logistic": {
+    "feature_set": "naive",
+    "algorithm": "logistic",
+    "n_features": 16,
+    "auc_observed_label": 0.9114,
+    "avg_precision_observed": 0.7746,
+    "brier_score": 0.0977,
+    "auc_vs_latent_qualification": 0.9151,
+    "auc_vs_counterfactual_fair_label": 0.845,
+    "fit_seconds": 0.018,
+    "inference_seconds_per_1k": 0.00128,
+    "operating_point": {
+      "threshold": 0.2857,
+      "precision": 0.5784,
+      "recall": 0.8792,
+      "f1": 0.6977,
+      "selection_rate": 0.3775,
+      "tn": 1422,
+      "fp": 382,
+      "fn": 72,
+      "tp": 524
+    }
+  },
+  "naive_gbm": {
+    "feature_set": "naive",
+    "algorithm": "gbm",
+    "n_features": 16,
+    "auc_observed_label": 0.9077,
+    "avg_precision_observed": 0.7654,
+    "brier_score": 0.1009,
+    "auc_vs_latent_qualification": 0.9215,
+    "auc_vs_counterfactual_fair_label": 0.8496,
+    "fit_seconds": 0.215,
+    "inference_seconds_per_1k": 0.00396,
+    "operating_point": {
+      "threshold": 0.3906,
+      "precision": 0.6966,
+      "recall": 0.7164,
+      "f1": 0.7064,
+      "selection_rate": 0.2554,
+      "tn": 1618,
+      "fp": 186,
+      "fn": 169,
+      "tp": 427
+    }
+  },
+  "governed_logistic": {
+    "feature_set": "governed",
+    "algorithm": "logistic",
+    "n_features": 12,
+    "auc_observed_label": 0.8648,
+    "avg_precision_observed": 0.6795,
+    "brier_score": 0.1222,
+    "auc_vs_latent_qualification": 0.9611,
+    "auc_vs_counterfactual_fair_label": 0.8893,
+    "fit_seconds": 0.014,
+    "inference_seconds_per_1k": 0.00123,
+    "operating_point": {
+      "threshold": 0.3602,
+      "precision": 0.556,
+      "recall": 0.7416,
+      "f1": 0.6355,
+      "selection_rate": 0.3312,
+      "tn": 1451,
+      "fp": 353,
+      "fn": 154,
+      "tp": 442
+    }
+  },
+  "governed_gbm": {
+    "feature_set": "governed",
+    "algorithm": "gbm",
+    "n_features": 12,
+    "auc_observed_label": 0.8594,
+    "avg_precision_observed": 0.663,
+    "brier_score": 0.1246,
+    "auc_vs_latent_qualification": 0.9522,
+    "auc_vs_counterfactual_fair_label": 0.8776,
+    "fit_seconds": 0.181,
+    "inference_seconds_per_1k": 0.0036,
+    "operating_point": {
+      "threshold": 0.4224,
+      "precision": 0.6116,
+      "recall": 0.6527,
+      "f1": 0.6315,
+      "selection_rate": 0.265,
+      "tn": 1557,
+      "fp": 247,
+      "fn": 207,
+      "tp": 389
+    }
+  }
+}

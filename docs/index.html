@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Responsible AI Resume Screening — Governance Project</title>
+<meta name="description" content="The model that best predicts historical recruiter decisions is not the model that best identifies qualified candidates. A governance case study in AI hiring: fairness audit, SHAP explainability, guardrails, drift monitoring, and energy accounting.">
+<meta property="og:title" content="Responsible AI Resume Screening — Governance Project">
+<meta property="og:description" content="Optimizing the only metric visible in production selects the discriminatory model. A full governance workup of an automated resume screener.">
+<meta property="og:type" content="website">
+<style>
+:root {
+  --ink:    #16150f;
+  --muted:  #52514e;
+  --faint:  #6b6a63;
+  --rule:   #d8d7d2;
+  --hair:   #e6e4de;
+  --blue:   #2a78d6;
+  --red:    #e34948;
+  --fail:   #b3201f;
+  --pass:   #0f6b3f;
+  --wash:   #f6f5f1;
+  --page:   #fdfdfb;
+  --card:   #ffffff;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  font-family: "DejaVu Serif", Georgia, serif;
+  font-size: 11.5pt; line-height: 1.6;
+  color: var(--ink); background: var(--page);
+  margin: 0; padding: 0;
+}
+.wrap { max-width: 52rem; margin: 0 auto; padding: 0 1.5rem 4rem; }
+
+h1, h2, h3, .sans { font-family: "DejaVu Sans", Helvetica, Arial, sans-serif; }
+h1 { font-size: 30pt; line-height: 1.1; letter-spacing: -0.6px; margin: 0 0 8px; }
+h2 { font-size: 15.5pt; margin: 44px 0 8px; padding-bottom: 5px;
+     border-bottom: 1.6px solid var(--ink); letter-spacing: -0.1px; }
+h3 { font-size: 12pt; margin: 22px 0 4px; }
+p  { margin: 0 0 11px; }
+a  { color: var(--blue); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+a:hover { color: #1c5da8; }
+
+/* ---------- masthead ---------- */
+header { border-top: 5px solid var(--ink); background: var(--wash);
+         border-bottom: 1px solid var(--rule); margin-bottom: 4px; }
+header .wrap { padding-top: 2.6rem; padding-bottom: 2rem; }
+.eyebrow { font-family: "DejaVu Sans", Helvetica, sans-serif; font-size: 8.6pt;
+           text-transform: uppercase; letter-spacing: 1.4px; color: var(--muted);
+           font-weight: 600; margin: 0 0 12px; }
+.lede { font-family: "DejaVu Sans", Helvetica, sans-serif; font-size: 12.4pt;
+        line-height: 1.5; color: var(--muted); margin: 10px 0 18px; max-width: 40rem; }
+.byline { font-family: "DejaVu Sans", Helvetica, sans-serif; font-size: 9.4pt;
+          color: var(--muted); border-top: 1px solid var(--rule); padding-top: 10px;
+          display: flex; flex-wrap: wrap; gap: 6px 18px; }
+.tag { display: inline-block; font-family: "DejaVu Sans", Helvetica, sans-serif;
+       font-size: 8.2pt; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase;
+       color: var(--fail); border: 1.2px solid var(--fail); border-radius: 2px;
+       padding: 2px 7px; }
+
+/* ---------- finding callout ---------- */
+.finding { background: var(--card); border-left: 4px solid var(--blue);
+           border-top: 1px solid var(--hair); border-right: 1px solid var(--hair);
+           border-bottom: 1px solid var(--hair);
+           padding: 16px 20px; margin: 30px 0 8px; }
+.finding .lbl { font-family: "DejaVu Sans", Helvetica, sans-serif; font-size: 8.2pt;
+                text-transform: uppercase; letter-spacing: 1px; color: var(--muted);
+                font-weight: 700; display: block; margin-bottom: 7px; }
+.finding p:last-child { margin-bottom: 0; }
+
+/* ---------- tables ---------- */
+.tablewrap { overflow-x: auto; margin: 14px 0 8px; }
+table { width: 100%; border-collapse: collapse;
+        font-family: "DejaVu Sans", Helvetica, sans-serif; font-size: 9.6pt; }
+th { text-align: left; border-bottom: 1.4px solid var(--ink); padding: 7px 8px;
+     font-weight: 600; white-space: nowrap; }
+td { border-bottom: 0.7px solid var(--hair); padding: 6px 8px; }
+td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; }
+.fail { color: var(--fail); font-weight: 600; }
+.pass { color: var(--pass); font-weight: 600; }
+caption { caption-side: bottom; text-align: left; font-family: "DejaVu Sans", Helvetica, sans-serif;
+          font-size: 8.8pt; color: var(--faint); padding-top: 8px; }
+
+/* ---------- deliverable cards ---------- */
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+         gap: 14px; margin: 18px 0 6px; list-style: none; padding: 0; }
+.card { background: var(--card); border: 1px solid var(--hair); border-top: 3px solid var(--blue);
+        padding: 15px 17px 16px; display: flex; flex-direction: column;
+        transition: border-color .15s ease, transform .15s ease; }
+.card:hover { border-color: var(--blue); transform: translateY(-1px); }
+.card h3 { margin: 0 0 5px; font-size: 11.4pt; }
+.card h3 a { text-decoration: none; }
+.card h3 a::after { content: ""; position: absolute; inset: 0; }
+.card { position: relative; }
+.card p { font-size: 10.2pt; line-height: 1.5; color: var(--muted); margin: 0 0 10px; }
+.card .alt { font-family: "DejaVu Sans", Helvetica, sans-serif; font-size: 8.8pt;
+             color: var(--faint); margin-top: auto; position: relative; z-index: 1; }
+.card .alt a { position: relative; z-index: 1; }
+
+/* ---------- figure gallery ---------- */
+.gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
+           gap: 26px 22px; margin: 20px 0 0; padding: 0; list-style: none; }
+.gallery figure { margin: 0; }
+.gallery img { width: 100%; height: auto; display: block; background: #fff;
+               border: 1px solid var(--hair); }
+.gallery a { display: block; }
+.gallery a:hover img { border-color: var(--blue); }
+.gallery figcaption { font-family: "DejaVu Sans", Helvetica, sans-serif; font-size: 9pt;
+                      line-height: 1.45; color: var(--muted); margin-top: 8px; }
+.gallery figcaption strong { color: var(--ink); }
+
+/* ---------- misc ---------- */
+ol, ul { margin: 10px 0 12px; padding-left: 21px; }
+li { margin-bottom: 7px; }
+code { font-family: "DejaVu Sans Mono", ui-monospace, Consolas, monospace;
+       font-size: 10pt; background: #f2f1ec; padding: 1px 4px; border-radius: 2px; }
+pre { background: var(--wash); border: 1px solid var(--hair); padding: 12px 14px;
+      overflow-x: auto; font-size: 9.6pt; line-height: 1.5; }
+pre code { background: none; padding: 0; font-size: inherit; }
+footer { border-top: 1px solid var(--rule); margin-top: 46px; padding-top: 14px;
+         font-family: "DejaVu Sans", Helvetica, sans-serif; font-size: 8.8pt;
+         color: var(--faint); line-height: 1.5; }
+
+@media (max-width: 640px) {
+  h1 { font-size: 22pt; }
+  .lede { font-size: 11.4pt; }
+  body { font-size: 11pt; }
+  .wrap { padding-left: 1.1rem; padding-right: 1.1rem; }
+}
+</style>
+</head><body>
+
+<header>
+  <div class="wrap">
+    <p class="eyebrow">AI Governance Case Study &middot; Employment</p>
+    <h1>Responsible AI Resume&nbsp;Screening</h1>
+    <p class="lede">Design, evaluation, and deployment controls for a high-risk AI system
+    in hiring — built so that every governance claim is checked against evidence rather
+    than asserted.</p>
+    <div class="byline">
+      <span><strong>Nick Warshak</strong></span>
+      <span>8 August 2026</span>
+      <span>EU AI Act Annex III §4 · NYC Local Law 144</span>
+      <span class="tag">Reference implementation — not for production</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+<div class="finding">
+  <span class="lbl">The central finding</span>
+  <p>The model that best predicts historical recruiter decisions is <strong>not</strong> the
+  model that best identifies qualified candidates.</p>
+  <p>Two models were trained on the same applicant population. The naive model scores higher
+  against recruiter decisions (AUC <strong>0.911</strong> vs 0.865) and lower against true
+  qualification (0.915 vs <strong>0.961</strong>). In production only the first number is
+  observable — so standard model selection, done correctly by every engineering measure, ships
+  the discriminatory model. Accuracy against a biased label is not a measure of quality; it is
+  a measure of fidelity to the bias.</p>
+</div>
+
+<p style="font-size:10.2pt;color:var(--muted);font-family:'DejaVu Sans',Helvetica,sans-serif;">
+Training data is a synthetic population of 12,000 applicants in which latent qualification is
+known and generated independent of protected class — so every disparity the audit finds is
+measurement bias by construction.</p>
+
+<h2>Read the work</h2>
+
+<ul class="cards">
+  <li class="card">
+    <h3><a href="report.html">Governance report</a></h3>
+    <p>The primary deliverable. Model overview, disparate-impact audit, explainability,
+    six guardrail layers, drift monitoring, and sustainability accounting.</p>
+    <span class="alt">Web edition &middot; <a href="report.pdf">PDF, 7 pages</a></span>
+  </li>
+  <li class="card">
+    <h3><a href="notebook.html">Executed notebook</a></h3>
+    <p>The end-to-end pipeline with every output captured: data generation, dual evaluation,
+    fairness testing, SHAP, guardrails, and monitoring.</p>
+    <span class="alt">Static HTML &middot; runs seeded at 42</span>
+  </li>
+  <li class="card">
+    <h3><a href="model-card.html">Model card</a></h3>
+    <p>Intended use and explicit out-of-scope uses, performance, known disparities that
+    remain unresolved, limitations, and regulatory posture.</p>
+    <span class="alt">Version 1.0 &middot; <a href="MODEL_CARD.md">Markdown source</a></span>
+  </li>
+  <li class="card">
+    <h3><a href="#figures">Figures</a></h3>
+    <p>Eight generated charts: the performance trade-off, impact ratios, SHAP attribution
+    before and after governance, the drift timeline, and energy accounting.</p>
+    <span class="alt">All regenerated from <code>src/</code></span>
+  </li>
+</ul>
+
+<h2>Key results</h2>
+
+<div class="tablewrap">
+<table>
+  <caption>Impact ratios below 0.80 are prima facie evidence of adverse impact under the EEOC
+  Uniform Guidelines (29 CFR 1607.4D).</caption>
+  <tr><th>Metric</th><th class="n">Naive model</th><th class="n">Governed model</th></tr>
+  <tr><td>AUC vs recruiter decisions <em>(the only metric visible in production)</em></td>
+      <td class="n">0.911</td><td class="n">0.865</td></tr>
+  <tr><td>AUC vs true qualification</td>
+      <td class="n">0.915</td><td class="n"><strong>0.961</strong></td></tr>
+  <tr><td>Worst impact ratio — sex</td>
+      <td class="n fail">0.612</td><td class="n pass">0.967</td></tr>
+  <tr><td>Worst impact ratio — race/ethnicity</td>
+      <td class="n fail">0.633</td><td class="n pass">0.833</td></tr>
+  <tr><td>Worst impact ratio — intersectional</td>
+      <td class="n fail">0.488</td><td class="n fail">0.652</td></tr>
+  <tr><td>SHAP attribution flowing through demographic proxies</td>
+      <td class="n fail">37.7%</td><td class="n pass">0.0%</td></tr>
+  <tr><td>Red-team cases passed</td>
+      <td class="n">—</td><td class="n">7 / 7</td></tr>
+  <tr><td>Annual pipeline energy at 250,000 resumes/year</td>
+      <td class="n">—</td><td class="n">0.19 kWh</td></tr>
+</table>
+</div>
+
+<h2 id="figures">Figures</h2>
+
+<ul class="gallery">
+  <li><figure>
+    <a href="figures/performance_tradeoff.png"><img src="figures/performance_tradeoff.png"
+       alt="Grouped bar chart comparing four models on AUC against recruiter decisions versus AUC against true qualification"></a>
+    <figcaption><strong>Performance trade-off.</strong> Grey bars are the only metric visible in
+    production. Selecting on them ships the naive model. The governed logistic model — 2.1 KB,
+    twelve features, fully interpretable — is the best model at the actual job.</figcaption>
+  </figure></li>
+
+  <li><figure>
+    <a href="figures/impact_ratios.png"><img src="figures/impact_ratios.png"
+       alt="Impact ratios by race and ethnicity for human recruiters, the naive model, and the governed model, against the 0.80 four-fifths threshold"></a>
+    <figcaption><strong>Impact ratios.</strong> By race/ethnicity. Removing four proxy features
+    lifts every marginal group above the four-fifths threshold.</figcaption>
+  </figure></li>
+
+  <li><figure>
+    <a href="figures/proxy_reliance.png"><img src="figures/proxy_reliance.png"
+       alt="Paired horizontal bar charts of feature attribution share for the naive and governed models, with demographic proxies highlighted in red"></a>
+    <figcaption><strong>Proxy reliance.</strong> Removing proxies redistributes attribution onto
+    merit signals. Keyword match rises from 18.8% to 33.3% of the decision. Red bars are
+    demographic proxies.</figcaption>
+  </figure></li>
+
+  <li><figure>
+    <a href="figures/shap_beeswarm_naive.png"><img src="figures/shap_beeswarm_naive.png"
+       alt="SHAP beeswarm plot of feature attributions for the naive model"></a>
+    <figcaption><strong>SHAP attributions — naive model.</strong> Referral, school prestige, and
+    employment gap carry 37.7% of the decision between them.</figcaption>
+  </figure></li>
+
+  <li><figure>
+    <a href="figures/shap_beeswarm_governed.png"><img src="figures/shap_beeswarm_governed.png"
+       alt="SHAP beeswarm plot of feature attributions for the governed model"></a>
+    <figcaption><strong>SHAP attributions — governed model.</strong> The same view after the four
+    proxy features are removed: 0.0% of attribution flows through demographic proxies.</figcaption>
+  </figure></li>
+
+  <li><figure>
+    <a href="figures/shap_waterfall_local.png"><img src="figures/shap_waterfall_local.png"
+       alt="SHAP waterfall plot decomposing a single borderline applicant's score into per-feature contributions"></a>
+    <figcaption><strong>Local explanation.</strong> A borderline applicant decomposed
+    feature by feature — the basis an adverse-action notice would have to cite.</figcaption>
+  </figure></li>
+
+  <li><figure>
+    <a href="figures/monitoring_timeline.png"><img src="figures/monitoring_timeline.png"
+       alt="Six-month monitoring timeline showing PSI drift, fairness SLO breaches, and incident routing"></a>
+    <figcaption><strong>Monitoring timeline.</strong> Six simulated months under a compounding
+    drift scenario — a sector layoff shifting the pool toward senior candidates with recent
+    employment gaps.</figcaption>
+  </figure></li>
+
+  <li><figure>
+    <a href="figures/energy_comparison.png"><img src="figures/energy_comparison.png"
+       alt="Bar chart comparing annual energy consumption of the logistic pipeline against LLM-based screening"></a>
+    <figcaption><strong>Energy accounting.</strong> Annual pipeline energy at 250,000
+    resumes/year — 0.19 kWh, 403–4,019× below an LLM-based screener. Both bars carry identical
+    parsing and serving overhead.</figcaption>
+  </figure></li>
+</ul>
+
+<h2>What this project does not claim</h2>
+
+<ol>
+  <li>The governed model <strong>still fails</strong> the four-fifths rule intersectionally for
+  Female / Hispanic-Latino applicants (0.652; 95% CI 0.370–0.949; 87% bootstrap probability of a
+  genuine breach). It passes marginal audits while failing this intersection. Disclosed, not
+  resolved.</li>
+  <li><code>years_experience</code> remains age-correlated (1.47 SD gap across age groups).
+  Retained on business-necessity grounds and monitored quarterly — a live ADEA exposure, not a
+  solved problem.</li>
+  <li>Training data is synthetic. The metrics demonstrate the governance method; they do not
+  transfer to a real applicant pool.</li>
+  <li>The system is suitable for <strong>ranking and routing under human review</strong>, not
+  automated rejection. The architecture contains no <code>REJECT</code> code path.</li>
+</ol>
+
+<h2>Reproducing</h2>
+
+<p>Every figure and statistic on this site is generated by the accompanying code, seeded at 42,
+and gated by an automated check that 64 report claims match the computed metrics.</p>
+
+<pre><code>pip install scikit-learn pandas numpy matplotlib shap scipy joblib
+cd src
+python3 generate_data.py &amp;&amp; python3 train.py &amp;&amp; python3 fairness.py \
+  &amp;&amp; python3 significance.py &amp;&amp; python3 explain.py &amp;&amp; python3 monitor.py \
+  &amp;&amp; python3 sustainability.py &amp;&amp; python3 figures.py
+cd ../tests &amp;&amp; python3 verify_report.py     # 64/64 checks</code></pre>
+
+<p>Generated datasets and trained model artifacts are intentionally excluded from the repository;
+they rebuild deterministically from the commands above.</p>
+
+<footer>
+  <p><strong>Status.</strong> Reference implementation for governance demonstration. Not approved
+  for production use, and not a hiring tool. Training data is synthetic; no real applicant data
+  was used at any stage.</p>
+  <p>Nick Warshak · 2026 · Source, figures, and metrics regenerate end to end from
+  <code>src/</code>.</p>
+</footer>
+
+</div>
+</body></html>

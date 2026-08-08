@@ -1,0 +1,452 @@
+{
+  "human_baseline": {
+    "sex_worst_impact_ratio": 0.6066,
+    "race_worst_impact_ratio": 0.5828
+  },
+  "naive_gbm": {
+    "sex_worst_impact_ratio": 0.6116,
+    "race_worst_impact_ratio": 0.6326,
+    "age_worst_impact_ratio": 0.8677,
+    "intersectional_worst_impact_ratio": 0.4881,
+    "intersectional_worst_group": "Female / Black",
+    "max_tpr_gap_race": 0.2038,
+    "max_fpr_gap_race": 0.0696,
+    "missed_qualified_spread": 0.2038,
+    "tables": {
+      "sex": [
+        {
+          "group": "Male",
+          "n": 1732,
+          "selection_rate": 0.2864,
+          "tpr": 0.5831,
+          "fpr": 0.1133,
+          "impact_ratio": 1.0,
+          "passes_4_5ths": true
+        },
+        {
+          "group": "Female",
+          "n": 668,
+          "selection_rate": 0.1751,
+          "tpr": 0.3891,
+          "fpr": 0.0559,
+          "impact_ratio": 0.6116,
+          "passes_4_5ths": false
+        }
+      ],
+      "race": [
+        {
+          "group": "White",
+          "n": 1113,
+          "selection_rate": 0.2749,
+          "tpr": 0.5567,
+          "fpr": 0.1187,
+          "impact_ratio": 1.0,
+          "passes_4_5ths": true
+        },
+        {
+          "group": "Asian",
+          "n": 739,
+          "selection_rate": 0.2652,
+          "tpr": 0.5445,
+          "fpr": 0.0939,
+          "impact_ratio": 0.9647,
+          "passes_4_5ths": true
+        },
+        {
+          "group": "Hispanic/Latino",
+          "n": 262,
+          "selection_rate": 0.2176,
+          "tpr": 0.4949,
+          "fpr": 0.0491,
+          "impact_ratio": 0.7913,
+          "passes_4_5ths": false
+        },
+        {
+          "group": "Black",
+          "n": 194,
+          "selection_rate": 0.1959,
+          "tpr": 0.4545,
+          "fpr": 0.0625,
+          "impact_ratio": 0.7125,
+          "passes_4_5ths": false
+        },
+        {
+          "group": "Two or more/Other",
+          "n": 92,
+          "selection_rate": 0.1739,
+          "tpr": 0.3529,
+          "fpr": 0.069,
+          "impact_ratio": 0.6326,
+          "passes_4_5ths": false
+        }
+      ],
+      "age": [
+        {
+          "group": "40 and over",
+          "n": 523,
+          "selection_rate": 0.2849,
+          "tpr": 0.5202,
+          "fpr": 0.11,
+          "impact_ratio": 1.0,
+          "passes_4_5ths": true
+        },
+        {
+          "group": "Under 40",
+          "n": 1877,
+          "selection_rate": 0.2472,
+          "tpr": 0.5336,
+          "fpr": 0.094,
+          "impact_ratio": 0.8677,
+          "passes_4_5ths": true
+        }
+      ],
+      "intersectional": [
+        {
+          "group": "Male / White",
+          "n": 820,
+          "selection_rate": 0.3073,
+          "impact_ratio": 1.0,
+          "passes_4_5ths": true
+        },
+        {
+          "group": "Male / Asian",
+          "n": 524,
+          "selection_rate": 0.3015,
+          "impact_ratio": 0.9812,
+          "passes_4_5ths": true
+        },
+        {
+          "group": "Male / Hispanic/Latino",
+          "n": 194,
+          "selection_rate": 0.2371,
+          "impact_ratio": 0.7716,
+          "passes_4_5ths": false
+        },
+        {
+          "group": "Male / Black",
+          "n": 134,
+          "selection_rate": 0.2164,
+          "impact_ratio": 0.7042,
+          "passes_4_5ths": false
+        },
+        {
+          "group": "Female / White",
+          "n": 293,
+          "selection_rate": 0.1843,
+          "impact_ratio": 0.5997,
+          "passes_4_5ths": false
+        },
+        {
+          "group": "Male / Two or more/Other",
+          "n": 60,
+          "selection_rate": 0.1833,
+          "impact_ratio": 0.5966,
+          "passes_4_5ths": false
+        },
+        {
+          "group": "Female / Asian",
+          "n": 215,
+          "selection_rate": 0.1767,
+          "impact_ratio": 0.5751,
+          "passes_4_5ths": false
+        },
+        {
+          "group": "Female / Hispanic/Latino",
+          "n": 68,
+          "selection_rate": 0.1618,
+          "impact_ratio": 0.5264,
+          "passes_4_5ths": false
+        },
+        {
+          "group": "Female / Black",
+          "n": 60,
+          "selection_rate": 0.15,
+          "impact_ratio": 0.4881,
+          "passes_4_5ths": false
+        }
+      ],
+      "missed_qualified": [
+        {
+          "group": "White",
+          "n_qualified": 397,
+          "missed_rate": 0.4433
+        },
+        {
+          "group": "Asian",
+          "n_qualified": 281,
+          "missed_rate": 0.4555
+        },
+        {
+          "group": "Hispanic/Latino",
+          "n_qualified": 99,
+          "missed_rate": 0.5051
+        },
+        {
+          "group": "Black",
+          "n_qualified": 66,
+          "missed_rate": 0.5455
+        },
+        {
+          "group": "Two or more/Other",
+          "n_qualified": 34,
+          "missed_rate": 0.6471
+        }
+      ],
+      "calibration": [
+        {
+          "group": "Asian",
+          "mean_score": 0.2529,
+          "actual_rate": 0.3802,
+          "calibration_gap": -0.1273
+        },
+        {
+          "group": "Black",
+          "mean_score": 0.2006,
+          "actual_rate": 0.3402,
+          "calibration_gap": -0.1396
+        },
+        {
+          "group": "Hispanic/Latino",
+          "mean_score": 0.2146,
+          "actual_rate": 0.3779,
+          "calibration_gap": -0.1633
+        },
+        {
+          "group": "Two or more/Other",
+          "mean_score": 0.1905,
+          "actual_rate": 0.3696,
+          "calibration_gap": -0.1791
+        },
+        {
+          "group": "White",
+          "mean_score": 0.2641,
+          "actual_rate": 0.3567,
+          "calibration_gap": -0.0926
+        }
+      ]
+    }
+  },
+  "governed_logistic": {
+    "sex_worst_impact_ratio": 0.9673,
+    "race_worst_impact_ratio": 0.8327,
+    "age_worst_impact_ratio": 0.98,
+    "intersectional_worst_impact_ratio": 0.6522,
+    "intersectional_worst_group": "Female / Hispanic/Latino",
+    "max_tpr_gap_race": 0.1295,
+    "max_fpr_gap_race": 0.0693,
+    "missed_qualified_spread": 0.1295,
+    "tables": {
+      "sex": [
+        {
+          "group": "Male",
+          "n": 1732,
+          "selection_rate": 0.3343,
+          "tpr": 0.6881,
+          "fpr": 0.128,
+          "impact_ratio": 1.0,
+          "passes_4_5ths": true
+        },
+        {
+          "group": "Female",
+          "n": 668,
+          "selection_rate": 0.3234,
+          "tpr": 0.6904,
+          "fpr": 0.1189,
+          "impact_ratio": 0.9673,
+          "passes_4_5ths": true
+        }
+      ],
+      "race": [
+        {
+          "group": "Two or more/Other",
+          "n": 92,
+          "selection_rate": 0.3804,
+          "tpr": 0.7647,
+          "fpr": 0.1552,
+          "impact_ratio": 1.0,
+          "passes_4_5ths": true
+        },
+        {
+          "group": "Black",
+          "n": 194,
+          "selection_rate": 0.3454,
+          "tpr": 0.7879,
+          "fpr": 0.1172,
+          "impact_ratio": 0.9078,
+          "passes_4_5ths": true
+        },
+        {
+          "group": "Asian",
+          "n": 739,
+          "selection_rate": 0.3356,
+          "tpr": 0.6584,
+          "fpr": 0.1376,
+          "impact_ratio": 0.8821,
+          "passes_4_5ths": true
+        },
+        {
+          "group": "White",
+          "n": 1113,
+          "selection_rate": 0.3252,
+          "tpr": 0.6851,
+          "fpr": 0.1257,
+          "impact_ratio": 0.8549,
+          "passes_4_5ths": true
+        },
+        {
+          "group": "Hispanic/Latino",
+          "n": 262,
+          "selection_rate": 0.3168,
+          "tpr": 0.697,
+          "fpr": 0.0859,
+          "impact_ratio": 0.8327,
+          "passes_4_5ths": true
+        }
+      ],
+      "age": [
+        {
+          "group": "40 and over",
+          "n": 523,
+          "selection_rate": 0.3365,
+          "tpr": 0.6457,
+          "fpr": 0.1067,
+          "impact_ratio": 1.0,
+          "passes_4_5ths": true
+        },
+        {
+          "group": "Under 40",
+          "n": 1877,
+          "selection_rate": 0.3298,
+          "tpr": 0.7034,
+          "fpr": 0.13,
+          "impact_ratio": 0.98,
+          "passes_4_5ths": true
+        }
+      ],
+      "intersectional": [
+        {
+          "group": "Male / Two or more/Other",
+          "n": 60,
+          "selection_rate": 0.3833,
+          "impact_ratio": 1.0,
+          "passes_4_5ths": true
+        },
+        {
+          "group": "Female / Black",
+          "n": 60,
+          "selection_rate": 0.3667,
+          "impact_ratio": 0.9565,
+          "passes_4_5ths": true
+        },
+        {
+          "group": "Female / Asian",
+          "n": 215,
+          "selection_rate": 0.3442,
+          "impact_ratio": 0.8979,
+          "passes_4_5ths": true
+        },
+        {
+          "group": "Male / Hispanic/Latino",
+          "n": 194,
+          "selection_rate": 0.3402,
+          "impact_ratio": 0.8875,
+          "passes_4_5ths": true
+        },
+        {
+          "group": "Male / Black",
+          "n": 134,
+          "selection_rate": 0.3358,
+          "impact_ratio": 0.8761,
+          "passes_4_5ths": true
+        },
+        {
+          "group": "Male / Asian",
+          "n": 524,
+          "selection_rate": 0.3321,
+          "impact_ratio": 0.8662,
+          "passes_4_5ths": true
+        },
+        {
+          "group": "Male / White",
+          "n": 820,
+          "selection_rate": 0.3305,
+          "impact_ratio": 0.8621,
+          "passes_4_5ths": true
+        },
+        {
+          "group": "Female / White",
+          "n": 293,
+          "selection_rate": 0.3106,
+          "impact_ratio": 0.8102,
+          "passes_4_5ths": true
+        },
+        {
+          "group": "Female / Hispanic/Latino",
+          "n": 68,
+          "selection_rate": 0.25,
+          "impact_ratio": 0.6522,
+          "passes_4_5ths": false
+        }
+      ],
+      "missed_qualified": [
+        {
+          "group": "Black",
+          "n_qualified": 66,
+          "missed_rate": 0.2121
+        },
+        {
+          "group": "Two or more/Other",
+          "n_qualified": 34,
+          "missed_rate": 0.2353
+        },
+        {
+          "group": "Hispanic/Latino",
+          "n_qualified": 99,
+          "missed_rate": 0.303
+        },
+        {
+          "group": "White",
+          "n_qualified": 397,
+          "missed_rate": 0.3149
+        },
+        {
+          "group": "Asian",
+          "n_qualified": 281,
+          "missed_rate": 0.3416
+        }
+      ],
+      "calibration": [
+        {
+          "group": "Asian",
+          "mean_score": 0.2475,
+          "actual_rate": 0.3802,
+          "calibration_gap": -0.1327
+        },
+        {
+          "group": "Black",
+          "mean_score": 0.2597,
+          "actual_rate": 0.3402,
+          "calibration_gap": -0.0805
+        },
+        {
+          "group": "Hispanic/Latino",
+          "mean_score": 0.2565,
+          "actual_rate": 0.3779,
+          "calibration_gap": -0.1214
+        },
+        {
+          "group": "Two or more/Other",
+          "mean_score": 0.2552,
+          "actual_rate": 0.3696,
+          "calibration_gap": -0.1144
+        },
+        {
+          "group": "White",
+          "mean_score": 0.2497,
+          "actual_rate": 0.3567,
+          "calibration_gap": -0.107
+        }
+      ]
+    }
+  }
+}

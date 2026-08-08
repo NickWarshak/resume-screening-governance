@@ -1,0 +1,9 @@
+model,attribute,group,n,ratio,ci_low,ci_high,prob_below_threshold
+governed_logistic,sex,Female,668,0.9563,0.8491,1.0,0.0032
+governed_logistic,race_ethnicity,Black,194,0.8831,0.6602,1.0,0.2232
+governed_logistic,race_ethnicity,Hispanic/Latino,262,0.8106,0.6119,1.0,0.4628
+governed_logistic,intersection,Female / Hispanic/Latino,68,0.6335,0.3697,0.9489,0.8652
+governed_logistic,intersection,Female / Black,60,0.9248,0.6069,1.2541,0.2094
+naive_gbm,sex,Female,668,0.6136,0.5092,0.7279,0.9986
+naive_gbm,race_ethnicity,Black,194,0.7018,0.5012,0.9174,0.8258
+naive_gbm,intersection,Female / Black,60,0.4747,0.2015,0.784,0.9798
